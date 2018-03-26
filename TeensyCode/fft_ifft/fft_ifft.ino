@@ -116,6 +116,7 @@ void setup() {
   if (SD.exists(filenameOut)) {
     SD.remove(filenameOut);
   }
+  Serial.print(F("write data to .txt file ..."));
   write_array_to_txt_line(NULL, xVec, SIG_LEN, filenameOut);
   write_array_to_txt_line(NULL, yVec, SIG_LEN, filenameOut);
   //write_array_to_txt_line(NULL, spec_pow, FFT_LEN, filenameOut);
