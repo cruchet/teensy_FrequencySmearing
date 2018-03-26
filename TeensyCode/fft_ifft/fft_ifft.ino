@@ -40,8 +40,7 @@ arm_cfft_radix4_instance_f32 ifftInst;
 
 // global variables
 bool first = true;
-//const PROGMEM char filenameOut[] = {"fft_ifft.txt"};
-char filenameOut[] = {"fft_ifft.txt"};
+const PROGMEM char filenameOut[] = {"fft_ifft.txt"};
 RamMonitor ram;
 
 void setup() {
@@ -62,20 +61,7 @@ void setup() {
   arm_status fft_status = ARM_MATH_TEST_FAILURE;
   arm_status ifft_status = ARM_MATH_TEST_FAILURE;
 
-  // set audio shield and SD card
-  Serial.begin(9600);
-  AudioMemory(30);
-  sgtl5000_1.enable();
-  sgtl5000_1.volume(0.45);
-  SPI.setMOSI(SDCARD_MOSI_PIN);
-  SPI.setSCK(SDCARD_SCK_PIN);
-  if (!(SD.begin(SDCARD_CS_PIN))) {
-    while (1) {
-      Serial.println(F("Unable to access the SD card"));
-      delay(500);
-    }
-  }
-  pinMode(13, OUTPUT); // LED on pin 13
+  set_periph();
   delay(2000);
 
   // initialize FFT
@@ -88,31 +74,31 @@ void setup() {
   if (ifft_status != ARM_MATH_SUCCESS) {
     Serial.println(F("error in initializing IFFT"));
   }
-  Serial.print("FFT initialized\t"); Serial.print(fft_status); Serial.print("\t"); Serial.println(ifft_status);
+  Serial.print(F("FFT initialized\t")); Serial.print(fft_status); Serial.print("\t"); Serial.println(ifft_status);
 
   // synthetize input signal
-  Serial.println("synthetize input signal");
+  Serial.println(F("synthetize input signal"));
   for (i = 0; i < SIG_LEN; i++) {
     tVec[i] = i*ts;
     xVec[i] = arm_sin_f32(2 * PI * sigFreq * tVec[i]);
   }
 
   // compute FFT / IFFT
-  Serial.println("compute FFT / IFFT");
+  Serial.println(F("compute FFT / IFFT"));
   for (nFrame = 0; nFrame < SIG_LEN / FFT_LEN; nFrame++) {
     // copy frame
-    Serial.print("nFrame="); Serial.print(nFrame); Serial.println("\tcopy frame");
+    Serial.print(F("nFrame=")); Serial.print(nFrame); Serial.println(F("\tcopy frame"));
     for (i = 0; i < FFT_LEN; i++) {
       frame[2*i] = xVec[i + nFrame * FFT_LEN]; // real part
       frame[2*i + 1] = 0;                     // imaginary part
       //      Serial.println((float32_t)AudioWindowHanning1024[i]);
     }
-    Serial.println("\tFFT");
+    Serial.println(F("\tFFT"));
     arm_cfft_radix4_f32(&fftInst, frame);
     //arm_cmplx_mag_f32(frame, spec_pow, 2*fftLen);
 
     // IFFT
-    Serial.println("\tIFFT");
+    Serial.println(F("\tIFFT"));
     arm_cfft_radix4_f32(&ifftInst, frame);
     for (i = 0; i < FFT_LEN; i++) {
       yVec[i + nFrame * FFT_LEN] = frame[2 * i];
@@ -125,39 +111,15 @@ void setup() {
   // write spectrum into .txt file
   delay(1000);
   // open the file
-  Serial.print("free RAM: ");  Serial.print((ram.free() + 512));  Serial.print(" bytes (");
-  Serial.print( (float)ram.free()/ram.total()*100);
-  Serial.println("%)");
+  Serial.print(F("free RAM: "));  Serial.print((ram.free() + 512));  Serial.print(F(" bytes ("));
+  Serial.print( (float)ram.free()/ram.total()*100);  Serial.println("%)");
   if (SD.exists(filenameOut)) {
     SD.remove(filenameOut);
   }
-  Serial.println(myFile);
-  myFile = SD.open(filenameOut, FILE_WRITE);
-  Serial.println(myFile);
-  // if the file opened okay, write to it:
-  if (myFile) {
-    Serial.print("Writing to .txt file...");
-    for (i=0; i<SIG_LEN; i++) {
-      myFile.print(xVec[i], 9);
-      myFile.print("\t");
-      myFile.print(yVec[i], 9);   // 2nd argument specify the number of digits
-      myFile.println();
-    }
-    // close the file:
-    myFile.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening .txt file");
-  }
-  /*Serial.print("print xVec, yVec, and spec to .txt file...");
-    if(SD.exists(filenameOut)) {
-    SD.remove(filenameOut);
-    }
-    write_array_to_txt_line(NULL, xVec, SIG_LEN, filenameOut);
-    write_array_to_txt_line(NULL, yVec, SIG_LEN, filenameOut);
-    //write_array_to_txt_line(NULL, spec_pow, FFT_LEN, filenameOut);
-    Serial.println("done");*/
+  write_array_to_txt_line(NULL, xVec, SIG_LEN, filenameOut);
+  write_array_to_txt_line(NULL, yVec, SIG_LEN, filenameOut);
+  //write_array_to_txt_line(NULL, spec_pow, FFT_LEN, filenameOut);
+  Serial.println("done");
 
 }
 
@@ -181,8 +143,25 @@ void loop() {
 
 /* ================================================== */
 
+// initialize SD card and other devices
+void set_periph(void) {
+  // set audio shield and SD card
+  Serial.begin(9600);
+  AudioMemory(30);
+  sgtl5000_1.enable();
+  sgtl5000_1.volume(0.45);
+  SPI.setMOSI(SDCARD_MOSI_PIN);
+  SPI.setSCK(SDCARD_SCK_PIN);
+  if (!(SD.begin(SDCARD_CS_PIN))) {
+    while (1) {
+      Serial.println(F("Unable to access the SD card"));
+      delay(500);
+    }
+  }
+  pinMode(13, OUTPUT); // LED on pin 13
+}
 
-/*// writes ONE array (int OR float) on one line of filename.txt file. Set the other pointer to NULL
+// writes ONE array (int OR float) on one line of filename.txt file. Set the other pointer to NULL
 void write_array_to_txt_line(int* arrayInt, float* arrayFloat, int arraySize, const char* filename) {
   int i = 0;
   File myFile = SD.open(filename, FILE_WRITE);
@@ -202,13 +181,13 @@ void write_array_to_txt_line(int* arrayInt, float* arrayFloat, int arraySize, co
       myFile.println();
     }
     else {
-      Serial.println("error: NULL array to write");
+      Serial.println(F("error: NULL array to write"));
     }
     // close the file:
     myFile.close();
   }
   else {
-    Serial.println("error opening .txt file");
+    Serial.println(F("error opening .txt file"));
   }
 }
 
@@ -218,5 +197,5 @@ void sin_vec_f32(float* vec_in, float* vec_out, int vec_length) {
   for (i = 0; i < vec_length; i++) {
     vec_out[i] = arm_sin_f32(vec_in[i]);
   }
-}*/
+}
 
