@@ -3,11 +3,11 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
-#include <avr/pgmspace.h>
 
 #include "Arduino.h"
 #include "arm_math.h"
 #include "RamMonitor.h"
+#include "smearing.h"
 
 // GUItool: begin automatically generated code
 AudioPlayQueue           queueOut;
@@ -21,12 +21,13 @@ extern "C" {
   extern const int16_t AudioWindowHanning1024[];
 }
 
-#define SDCARD_CS_PIN    BUILTIN_SDCARD
+//#define SDCARD_CS_PIN    BUILTIN_SDCARD  // teensy 3.6
+#define SDCARD_CS_PIN    10                // teensy 3.21
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14
 #define FRAME_SIZE       128
 #define FFT_LEN			     1024
-#define SIG_LEN          1024*20
+#define SIG_LEN          1024
 #define FFT_FLAG         0
 #define IFFT_FLAG        1
 
@@ -40,8 +41,11 @@ arm_cfft_radix4_instance_f32 ifftInst;
 
 // global variables
 bool first = true;
-const PROGMEM char filenameOut[] = {"fft_ifft.txt"};
+const char filenameOut[] = {"fft_ifft.txt"};
 RamMonitor ram;
+
+
+
 
 void setup() {
   int i = 0;
@@ -55,6 +59,7 @@ void setup() {
   float32_t ts = 1 / fs;        // sampling time [s]
   //float32_t T = SIG_LEN * ts;   // signal duration [s]
   float32_t sigFreq = 1000;     // signal frequency
+  uint8_t b = 1;
 
   File myFile;
 
@@ -96,7 +101,9 @@ void setup() {
     Serial.println(F("\tFFT"));
     arm_cfft_radix4_f32(&fftInst, frame);
     //arm_cmplx_mag_f32(frame, spec_pow, 2*fftLen);
-
+    
+    smearing(frame, b, 1024, fs);
+    
     // IFFT
     Serial.println(F("\tIFFT"));
     arm_cfft_radix4_f32(&ifftInst, frame);
@@ -121,6 +128,8 @@ void setup() {
   write_array_to_txt_line(NULL, yVec, SIG_LEN, filenameOut);
   //write_array_to_txt_line(NULL, spec_pow, FFT_LEN, filenameOut);
   Serial.println("done");
+
+  
 
 }
 
