@@ -3,10 +3,12 @@
 #include <SPI.h>
 #include <SD.h>
 #include <SerialFlash.h>
+#include <math.h>
 
 #include "Arduino.h"
 #include "arm_math.h"
 #include "RamMonitor.h"
+//#include "smear_mat.h"
 #include "smearing.h"
 
 // GUItool: begin automatically generated code
@@ -21,13 +23,12 @@ extern "C" {
   extern const int16_t AudioWindowHanning1024[];
 }
 
-//#define SDCARD_CS_PIN    BUILTIN_SDCARD  // teensy 3.6
-#define SDCARD_CS_PIN    10                // teensy 3.21
+#define SDCARD_CS_PIN    BUILTIN_SDCARD  // teensy 3.6
+//#define SDCARD_CS_PIN    10                // teensy 3.21
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14
-#define FRAME_SIZE       128
-#define FFT_LEN			     1024
-#define SIG_LEN          1024
+#define FFT_LEN			     256
+#define SIG_LEN          FFT_LEN*50
 #define FFT_FLAG         0
 #define IFFT_FLAG        1
 
@@ -44,9 +45,6 @@ bool first = true;
 const char filenameOut[] = {"fft_ifft.txt"};
 RamMonitor ram;
 
-
-
-
 void setup() {
   int i = 0;
   int nFrame = 0;
@@ -54,12 +52,17 @@ void setup() {
   float32_t xVec[SIG_LEN];      // real intput signal
   float32_t yVec[SIG_LEN];      // real output signal
   float32_t frame[2 * FFT_LEN];   // complex frame
+  float32_t win[FFT_LEN];       // window vector
   //float32_t spec_pow[FFT_LEN];  // spectrum
   float32_t fs = 16000;         // sampling frequency [Hz]
   float32_t ts = 1 / fs;        // sampling time [s]
   //float32_t T = SIG_LEN * ts;   // signal duration [s]
   float32_t sigFreq = 1000;     // signal frequency
-  uint8_t b = 1;
+  
+  uint8_t b = 6;
+  float32_t overlap = 0.5;
+  q15_t max = 0;
+  uint32_t max_idx = 0;
 
   File myFile;
 
@@ -81,36 +84,38 @@ void setup() {
   }
   Serial.print(F("FFT initialized\t")); Serial.print(fft_status); Serial.print("\t"); Serial.println(ifft_status);
 
-  // synthetize input signal
+  // synthetize input signal and initialize output vector
   Serial.println(F("synthetize input signal"));
   for (i = 0; i < SIG_LEN; i++) {
     tVec[i] = i*ts;
     xVec[i] = arm_sin_f32(2 * PI * sigFreq * tVec[i]);
+    yVec[i] = 0;
   }
-
+  // create window
+  arm_max_q15((q15_t*)AudioWindowHanning256, FFT_LEN, &max, &max_idx);
+  for(i=0; i<FFT_LEN; i++) {
+    win[i] = sqrt((float)AudioWindowHanning256[i] / max);
+  }
+  
   // compute FFT / IFFT
   Serial.println(F("compute FFT / IFFT"));
-  for (nFrame = 0; nFrame < SIG_LEN / FFT_LEN; nFrame++) {
+  for (nFrame = 0; nFrame < SIG_LEN/FFT_LEN/overlap-1; nFrame++) {
     // copy frame
     Serial.print(F("nFrame=")); Serial.print(nFrame); Serial.println(F("\tcopy frame"));
     for (i = 0; i < FFT_LEN; i++) {
-      frame[2*i] = xVec[i + nFrame * FFT_LEN]; // real part
+      frame[2*i] = xVec[i + nFrame * (int)(FFT_LEN*overlap)] * win[i]; // real part
       frame[2*i + 1] = 0;                     // imaginary part
-      //      Serial.println((float32_t)AudioWindowHanning1024[i]);
     }
     Serial.println(F("\tFFT"));
     arm_cfft_radix4_f32(&fftInst, frame);
-    //arm_cmplx_mag_f32(frame, spec_pow, 2*fftLen);
     
-    smearing(frame, b, 1024, fs);
+   // smearing(frame, b, FFT_LEN, fs);
     
     // IFFT
     Serial.println(F("\tIFFT"));
     arm_cfft_radix4_f32(&ifftInst, frame);
     for (i = 0; i < FFT_LEN; i++) {
-      yVec[i + nFrame * FFT_LEN] = frame[2 * i];
-      //Serial.println(yVec[i + nFrame * FFT_LEN]);
-
+      yVec[i + nFrame * (int)(FFT_LEN*overlap)] += (frame[2*i] * win[i]);
     }
   }
 
@@ -147,7 +152,6 @@ void loop() {
   //digitalWrite(13, HIGH);
   delay(300);
   digitalWrite(13, LOW);
-  
 }
 
 
@@ -208,4 +212,3 @@ void sin_vec_f32(float* vec_in, float* vec_out, int vec_length) {
     vec_out[i] = arm_sin_f32(vec_in[i]);
   }
 }
-
