@@ -18,13 +18,14 @@ AudioConnection          patchCord1(queueOut, 0, audio_out, 0);
 AudioConnection          patchCord2(queueOut, 0, audio_out, 1);
 AudioControlSGTL5000     sgtl5000_1;
 // GUItool: end automatically generated code
-// windows.c
-extern "C" {
-  extern const int16_t AudioWindowHanning1024[];
-}
+
+//// windows.c
+//extern "C" {
+//  extern const int16_t AudioWindowHanning1024[];
+//}
 
 #define SDCARD_CS_PIN    BUILTIN_SDCARD  // teensy 3.6
-//#define SDCARD_CS_PIN    10                // teensy 3.21
+//#define SDCARD_CS_PIN    10                // teensy 3.2
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14
 #define FFT_LEN			     256
@@ -59,7 +60,7 @@ void setup() {
   //float32_t T = SIG_LEN * ts;   // signal duration [s]
   float32_t sigFreq = 1000;     // signal frequency
   
-  uint8_t b = 6;
+  uint8_t b = 3;
   float32_t overlap = 0.5;
   q15_t max = 0;
   uint32_t max_idx = 0;
@@ -88,7 +89,7 @@ void setup() {
   Serial.println(F("synthetize input signal"));
   for (i = 0; i < SIG_LEN; i++) {
     tVec[i] = i*ts;
-    xVec[i] = arm_sin_f32(2 * PI * sigFreq * tVec[i]);
+    xVec[i] = arm_sin_f32(2*PI*sigFreq*tVec[i]) + 0.75*arm_sin_f32(2*PI*2*sigFreq*tVec[i]) + 0.5*arm_sin_f32(2*PI*4*sigFreq*tVec[i]);
     yVec[i] = 0;
   }
   // create window
@@ -109,7 +110,7 @@ void setup() {
     Serial.println(F("\tFFT"));
     arm_cfft_radix4_f32(&fftInst, frame);
     
-   // smearing(frame, b, FFT_LEN, fs);
+    smearing(frame, b, FFT_LEN, fs);
     
     // IFFT
     Serial.println(F("\tIFFT"));
