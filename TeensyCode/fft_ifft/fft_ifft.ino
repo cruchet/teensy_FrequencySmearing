@@ -60,10 +60,10 @@ void setup() {
   //float32_t T = SIG_LEN * ts;   // signal duration [s]
   float32_t sigFreq = 1000;     // signal frequency
   
-  uint8_t b = 3;
+  uint8_t   b       = 6;
   float32_t overlap = 0.5;
-  q15_t max = 0;
-  uint32_t max_idx = 0;
+  q15_t     max     = 0;
+  uint32_t  max_idx = 0;
 
   File myFile;
 
@@ -78,10 +78,22 @@ void setup() {
   fft_status   = arm_cfft_radix4_init_f32(&fftInst, fftLen, fftFlag, bitReverseFlag);
   if (fft_status != ARM_MATH_SUCCESS) {
     Serial.println(F("error in initializing FFT"));
+    if(fft_status == ARM_MATH_ARGUMENT_ERROR) {
+      Serial.println(F("ARM_MATH_ARGUMENT_ERROR"));
+    }
+    else {
+      Serial.println();
+    }
   }
   ifft_status  = arm_cfft_radix4_init_f32(&ifftInst, fftLen, ifftFlag, bitReverseFlag);
   if (ifft_status != ARM_MATH_SUCCESS) {
-    Serial.println(F("error in initializing IFFT"));
+    Serial.print(F("error in initializing IFFT:\t"));
+    if(ifft_status == ARM_MATH_ARGUMENT_ERROR) {
+      Serial.println(F("ARM_MATH_ARGUMENT_ERROR"));
+    }
+    else {
+      Serial.println();
+    }
   }
   Serial.print(F("FFT initialized\t")); Serial.print(fft_status); Serial.print("\t"); Serial.println(ifft_status);
 
@@ -89,7 +101,7 @@ void setup() {
   Serial.println(F("synthetize input signal"));
   for (i = 0; i < SIG_LEN; i++) {
     tVec[i] = i*ts;
-    xVec[i] = arm_sin_f32(2*PI*sigFreq*tVec[i]) + 0.75*arm_sin_f32(2*PI*2*sigFreq*tVec[i]) + 0.5*arm_sin_f32(2*PI*4*sigFreq*tVec[i]);
+    xVec[i] = arm_sin_f32(2*PI*sigFreq*tVec[i]);// + 0.75*arm_sin_f32(2*PI*2*sigFreq*tVec[i]) + 0.5*arm_sin_f32(2*PI*4*sigFreq*tVec[i]);
     yVec[i] = 0;
   }
   // create window
@@ -110,7 +122,7 @@ void setup() {
     Serial.println(F("\tFFT"));
     arm_cfft_radix4_f32(&fftInst, frame);
     
-    smearing(frame, b, FFT_LEN, fs);
+    smearing_comp(frame, b, FFT_LEN, fs);
     
     // IFFT
     Serial.println(F("\tIFFT"));
@@ -134,9 +146,6 @@ void setup() {
   write_array_to_txt_line(NULL, yVec, SIG_LEN, filenameOut);
   //write_array_to_txt_line(NULL, spec_pow, FFT_LEN, filenameOut);
   Serial.println("done");
-
-  
-
 }
 
 /* ================================================== */
