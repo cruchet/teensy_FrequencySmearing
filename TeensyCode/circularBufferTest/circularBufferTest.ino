@@ -32,10 +32,14 @@ AudioControlSGTL5000     sgtl5000_1;     //xy=135.00000762939453,482.00003433227
 CircularBuffer<int16_t, 10*FFT_LEN> buffIn;
 CircularBuffer<int16_t, 10*FFT_LEN> buffOut;
 
+float win[FFT_LEN];
 unsigned long time = 0;
+bool end = true;
+const char filenameOut[] = {"buffer_out.txt"};
 
 void setup() {
   set_periph();
+  create_window(win, FFT_LEN);
   delay(2000);
   queueIn.begin();
   time=millis();
@@ -47,8 +51,9 @@ void loop() {
   int16_t arrayIn[FFT_LEN/2];
   int16_t frame[FFT_LEN];
   int i=0;
+  unsigned int count_frame = 0;
   
-  if(audio_SD.isPlaying()) {
+  //if(audio_SD.isPlaying()) {
     // copy input signal in arrayIn in block of FFT_LEN/2
     read_array_form_queue(arrayIn, FFT_LEN/2);
 
@@ -57,19 +62,17 @@ void loop() {
       buffIn.push(arrayIn[i]);
     }
 
-    Serial.println("copy elements in buffer");
     // process the frame
-    q15_t max = 0;
-    uint32_t max_idx = 0;
-    
-    //arm_max_q15((q15_t*)AudioWindowHanning256, FFT_LEN, &max, &max_idx);
     if(buffIn.size() > FFT_LEN) {
+      read_frame_from_buffer(frame, FFT_LEN);
+            
+      // window the frame
       for(i=0; i<FFT_LEN; i++) {
-        frame[i] = buffIn.pop();
+        frame[i] *= win[i];
       }
+      count_frame++;
     }
-    Serial.println("process the frame");
-
+    
     // do overlapp and add ine the buffer
     if(buffOut.size() < FFT_LEN/2){      // fist time
       for(i=0; i<FFT_LEN; i++) {
@@ -79,7 +82,6 @@ void loop() {
     }
     else {
       overlap_add(frame, FFT_LEN);
-      Serial.println("do overlapp and add ine the buffer");
     }
 
     // output the buffer
@@ -92,22 +94,6 @@ void loop() {
       }
       queueOut.playBuffer();
     }
-    Serial.println("output the buffer\n");
-
-//    if(queueIn.available()) {
-//      buffer.push(queueIn.readBuffer());
-//      queueIn.freeBuffer();    
-//    //}
-//  
-//      if(!(buffer.isEmpty())) {
-//        frameOut = queueOut.getBuffer();
-//        buffOut = buffer.pop();
-//        for(i=0;i<QUEUE_LEN;i++) {
-//          frameOut[i] = buffOut[i];
-//        }
-//        queueOut.playBuffer();
-//      }
-//    }
   
     if(millis()-time>=250) {
       digitalWrite(13,HIGH);
@@ -116,7 +102,16 @@ void loop() {
       digitalWrite(13,LOW);
       time=millis();
     }
-  }
+  //}
+//  else if(end) {
+//    queueIn.end();
+//    delay(2000);
+//    Serial.println("done");
+////    AudioNoInterrupts();
+////    write_array_to_txt_line((int*)signal, NULL, 11813, filenameOut);
+////    AudioInterrupts();
+//    end=false;
+//  }
 }
 
 /* =================================================================================================== */
@@ -164,6 +159,62 @@ void read_array_form_queue(int16_t arrayIn[], int array_length) {
   else {
     Serial.println(F("error in read_array_form_queue: array_length must be a multiple of QUEUE_LEN"));
   }  
+}
+
+// read elements in buffIn with 50% overlap to create frame
+void read_frame_from_buffer(int16_t frame[], int frame_l) {
+  int i=0;
+  
+  //read first half and remove it from buffIn
+  for(i=0;i<frame_l/2;i++) {
+    frame[i] = buffIn.shift();
+  }
+  // read 2nd half but leave it for next frame (overlap)
+  for(i=frame_l/2; i<frame_l; i++) {
+    frame[i] = buffIn[i-frame_l/2];  
+  }
+}
+
+// creates a normalized hann window
+void create_window(float win[], int win_l){
+  int i=0;
+  q15_t     max     = 0;
+  uint32_t  max_idx = 0;
+  
+  arm_max_q15((q15_t*)AudioWindowHanning256, win_l, &max, &max_idx);
+  for(i=0; i<win_l; i++) {
+    win[i] = (float)AudioWindowHanning256[i] / max;
+  }
+}
+
+// writes ONE array (int OR float) on one line of filename.txt file. Set the other pointer to NULL
+void write_array_to_txt_line(int* arrayInt, float* arrayFloat, int arraySize, const char* filename) {
+  int i = 0;
+  File myFile = SD.open(filename, FILE_WRITE);
+  if (myFile) {
+    if (arrayInt) {
+      for (i = 0; i < arraySize; i++) {
+        myFile.print(arrayInt[i]);
+        myFile.print(" ");
+      }
+      myFile.println();
+    }
+    else if (arrayFloat) {
+      for (i = 0; i < arraySize; i++) {
+        myFile.print(arrayFloat[i], 9);
+        myFile.print(" ");
+      }
+      myFile.println();
+    }
+    else {
+      Serial.println(F("error: NULL array to write"));
+    }
+    // close the file:
+    myFile.close();
+  }
+  else {
+    Serial.println(F("error opening .txt file"));
+  }
 }
 
 // initialize SD card and other devices
