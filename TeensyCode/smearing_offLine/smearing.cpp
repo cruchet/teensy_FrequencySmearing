@@ -87,7 +87,7 @@ void smearing_comp(float32_t* frame, uint8_t b, int N, float32_t fs) {
       break;*/
     case 6 :
       //Serial.print("smear 6 ...");
-      sprsax(sa_b6_fs44k_L256, ija_b6_fs44k_L256, spec_power, frame, N/2);
+      sprsax(sa_b6_fs44k_L64, ija_b6_fs44k_L64, spec_power, frame, N/2);
       for(i=0; i<N/2; i++) {
         frame[2*i]    *= cos(spec_phase[i]);          // real part 
         frame[2*i+1]  *= sin(spec_phase[i]);          // imaginary part

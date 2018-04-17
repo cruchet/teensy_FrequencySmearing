@@ -31,11 +31,11 @@ void create_sqrthann_window(float win[], int win_l){
 }
 
 // initialize fft and test for errors
-void fft_init(arm_cfft_radix4_instance_f32* fftInst, uint16_t fftLen, uint8_t fftFlag, uint8_t bitReverseFlag) {
+void fft_init(arm_cfft_radix2_instance_f32* fftInst, uint16_t fftLen, uint8_t fftFlag, uint8_t bitReverseFlag) {
   Serial.print(F("initialize FFT...  "));
   arm_status fft_status = ARM_MATH_TEST_FAILURE;
   
-  fft_status   = arm_cfft_radix4_init_f32(fftInst, fftLen, fftFlag, bitReverseFlag);
+  fft_status   = arm_cfft_radix2_init_f32(fftInst, fftLen, fftFlag, bitReverseFlag);
   if (fft_status != ARM_MATH_SUCCESS) {
     Serial.println(F("error in initializing FFT"));
     if(fft_status == ARM_MATH_ARGUMENT_ERROR) {

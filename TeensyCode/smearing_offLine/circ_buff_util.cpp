@@ -22,27 +22,24 @@ void overlap_add(float frame[], int array_length) {
   }
 }
 
-// copy input signal in arrayIn in block of FFT_LEN/2
-void read_array_form_queue(float arrayIn[], int array_length, AudioRecordQueue* queueIn) {
+// copy input signal in arrayIn in blocks. Retruns 0 if queue is not big enough
+int read_array_form_queue(float arrayIn[], int array_length, AudioRecordQueue* queueIn) {
   int i=0;
-  int k=0;
-  int16_t* temp;
 
   if(array_length%QUEUE_LEN==0) {
-    while(queueIn->available()<=array_length/QUEUE_LEN) { 
-    }     // wait to have enough samples
-    
+    if(queueIn->available()<array_length/QUEUE_LEN) { 
+      return 0;     // not enough samples in queue
+    }     
     for(i=0; i<array_length/QUEUE_LEN; i++) {
-      temp = queueIn->readBuffer();
+      arm_q15_to_float(queueIn->readBuffer(), arrayIn, array_length);
       queueIn->freeBuffer();
-      for(k=0; k<QUEUE_LEN; k++) {
-        arrayIn[k+i*QUEUE_LEN] = (float)temp[k];
-      }
     }
   }
   else {
     Serial.println(F("error in read_array_form_queue: array_length must be a multiple of QUEUE_LEN"));
-  }  
+    return 0;
+  }
+  return 1;
 }
 
 // read elements in buffIn with 50% overlap to create frame
