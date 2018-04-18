@@ -36,19 +36,22 @@
 
 /***************** GUItool: begin automatically generated code *****************/
 AudioPlayQueue           queueOut;         
-AudioPlaySdWav           audio_SD;    
+//AudioPlaySdWav           audio_SD;
+AudioSynthWaveform       waveform1;    
 AudioOutputI2S           audio_out;
 AudioRecordQueue         queueIn;
 AudioConnection          patchCord1(queueOut, 0, audio_out, 0);
 AudioConnection          patchCord2(queueOut, 0, audio_out, 1);
-AudioConnection          patchCord3(audio_SD, 0, queueIn, 0);
+//AudioConnection          patchCord3(audio_SD, 0, queueIn, 0);
+AudioConnection          patchCord3(waveform1, 0, queueIn, 0);
 AudioControlSGTL5000     sgtl5000_1;
 /***************** GUItool: end automatically generated code *****************/
 
 /***************** Global variables *****************/
-float           win[FFT_LEN];               // vector for indow function
+float           win[FFT_LEN];     // vector for window function
 unsigned long   time = 0;
 unsigned int    count =0;
+int             freq = 500;       // frequency for the waveform
 // FFT variables
 uint16_t  fftLen          = FFT_LEN;
 uint8_t   fftFlag         = 0;
@@ -66,8 +69,7 @@ void setup() {
   create_sqrthann_window(win, FFT_LEN);
   delay(1000);
   queueIn.begin();
-  
-  audio_SD.play("piano.wav");
+  //audio_SD.play("piano.wav");
   delay(50);
   time = micros();
 }
@@ -81,7 +83,14 @@ void loop() {
   
 
   
-  if(audio_SD.isPlaying() && read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
+/*  if(audio_SD.isPlaying() && read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
+    // copy input signal in arrayIn in blocks
+    // copy elements in buffer
+    for(i=0; i<QUEUE_LEN; i++) {
+      buffIn.push(arrayIn[i]);
+    } 
+  }*/
+  if(read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
     // copy input signal in arrayIn in blocks
     // copy elements in buffer
     for(i=0; i<QUEUE_LEN; i++) {
@@ -107,9 +116,9 @@ void loop() {
   
     // process smearing
     
-    //smearing_comp(frameC, B, FFT_LEN, FS);
+    smearing_comp(frameC, B, FFT_LEN, FS);
     //AudioNoInterrupts();
-    //delayMicroseconds(1000);      // = QUEUE_LEN/fs
+    //delayMicroseconds(7000);      // = QUEUE_LEN/fs
     //AudioInterrupts();
     //Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n");
     
@@ -135,7 +144,6 @@ void loop() {
     // output the buffer
     int16_t* pOut;
     if(buffOut.size() > FFT_LEN + QUEUE_LEN) {
-      Serial.println(buffOut.size());
       // take the QUEUE_LEN first sample (from head)
       for(i=0; i<QUEUE_LEN; i++) {
         arrayOut[i] = buffOut.shift();
@@ -174,46 +182,11 @@ void set_periph(void) {
       delay(500);
     }
   }
+  waveform1.begin(WAVEFORM_SINE);
+  waveform1.frequency(AUDIO_SAMPLE_RATE_EXACT/FS*freq);
+  waveform1.amplitude(0.99); 
+  setI2SFreq(FS);
   pinMode(13, OUTPUT); // LED on pin 13
 }
-
-// function to change I2S sampling frequncy 
-// from: https://forum.pjrc.com/threads/38753-Discussion-about-a-simple-way-to-change-the-sample-rate?p=121384&viewfull=1#post121384)
-//void setI2SFreq(int freq) {
-//  typedef struct {
-//    uint8_t mult;
-//    uint16_t div;
-//  } __attribute__((__packed__)) tmclk;
-//  const int numfreqs = 14;
-//  const int samplefreqs[numfreqs] = { 8000, 11025, 16000, 22050, 32000, 44100, 44117.64706 , 48000, 88200, 44117.64706 * 2, 96000, 176400, 44117.64706 * 4, 192000};
-//
-//#if (F_PLL==16000000)
-//  const tmclk clkArr[numfreqs] = {{16, 125}, {148, 839}, {32, 125}, {145, 411}, {64, 125}, {151, 214}, {12, 17}, {96, 125}, {151, 107}, {24, 17}, {192, 125}, {127, 45}, {48, 17}, {255, 83} };
-//#elif (F_PLL==72000000)
-//  const tmclk clkArr[numfreqs] = {{32, 1125}, {49, 1250}, {64, 1125}, {49, 625}, {128, 1125}, {98, 625}, {8, 51}, {64, 375}, {196, 625}, {16, 51}, {128, 375}, {249, 397}, {32, 51}, {185, 271} };
-//#elif (F_PLL==96000000)
-//  const tmclk clkArr[numfreqs] = {{8, 375}, {73, 2483}, {16, 375}, {147, 2500}, {32, 375}, {147, 1250}, {2, 17}, {16, 125}, {147, 625}, {4, 17}, {32, 125}, {151, 321}, {8, 17}, {64, 125} };
-//#elif (F_PLL==120000000)
-//  const tmclk clkArr[numfreqs] = {{32, 1875}, {89, 3784}, {64, 1875}, {147, 3125}, {128, 1875}, {205, 2179}, {8, 85}, {64, 625}, {89, 473}, {16, 85}, {128, 625}, {178, 473}, {32, 85}, {145, 354} };
-//#elif (F_PLL==144000000)
-//  const tmclk clkArr[numfreqs] = {{16, 1125}, {49, 2500}, {32, 1125}, {49, 1250}, {64, 1125}, {49, 625}, {4, 51}, {32, 375}, {98, 625}, {8, 51}, {64, 375}, {196, 625}, {16, 51}, {128, 375} };
-//#elif (F_PLL==180000000)
-//  const tmclk clkArr[numfreqs] = {{46, 4043}, {49, 3125}, {73, 3208}, {98, 3125}, {183, 4021}, {196, 3125}, {16, 255}, {128, 1875}, {107, 853}, {32, 255}, {219, 1604}, {214, 853}, {64, 255}, {219, 802} };
-//#elif (F_PLL==192000000)
-//  const tmclk clkArr[numfreqs] = {{4, 375}, {37, 2517}, {8, 375}, {73, 2483}, {16, 375}, {147, 2500}, {1, 17}, {8, 125}, {147, 1250}, {2, 17}, {16, 125}, {147, 625}, {4, 17}, {32, 125} };
-//#elif (F_PLL==216000000)
-//  const tmclk clkArr[numfreqs] = {{32, 3375}, {49, 3750}, {64, 3375}, {49, 1875}, {128, 3375}, {98, 1875}, {8, 153}, {64, 1125}, {196, 1875}, {16, 153}, {128, 1125}, {226, 1081}, {32, 153}, {147, 646} };
-//#elif (F_PLL==240000000)
-//  const tmclk clkArr[numfreqs] = {{16, 1875}, {29, 2466}, {32, 1875}, {89, 3784}, {64, 1875}, {147, 3125}, {4, 85}, {32, 625}, {205, 2179}, {8, 85}, {64, 625}, {89, 473}, {16, 85}, {128, 625} };
-//#endif
-//
-//  for (int f = 0; f < numfreqs; f++) {
-//    if ( freq == samplefreqs[f] ) {
-//      while (I2S0_MCR & I2S_MCR_DUF) ;
-//      I2S0_MDR = I2S_MDR_FRACT((clkArr[f].mult - 1)) | I2S_MDR_DIVIDE((clkArr[f].div - 1));
-//      return;
-//    }
-//  }
-//}
 /***************** util functions *****************/
 

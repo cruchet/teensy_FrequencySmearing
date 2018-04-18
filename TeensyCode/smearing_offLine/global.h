@@ -1,9 +1,9 @@
 #ifndef global_h_
 #define global_h_
 
-#define FFT_LEN     128
+#define FFT_LEN     256
 #define QUEUE_LEN   256
-#define FS          44100
+#define FS          16000
 #define B           6
 #define BUFF_LEN    10*QUEUE_LEN
 
