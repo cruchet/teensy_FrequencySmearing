@@ -1,5 +1,5 @@
 /**
- * smearing_offLine.ino
+ * smearing_infLine.ino
  * Process frequency smearing on a .wav file stored on the SD card, 
  * using block processing and circular buffer to achieve overlap-and-add.
  * 
@@ -35,16 +35,26 @@
 #include "global.h"
 
 /***************** GUItool: begin automatically generated code *****************/
-AudioPlayQueue           queueOut;         
 //AudioPlaySdWav           audio_SD;
-AudioSynthWaveform       waveform1;    
+//AudioSynthWaveform       waveform1;  
+AudioInputI2S            audio_in;
 AudioOutputI2S           audio_out;
+AudioPlayQueue           queueOut;         
 AudioRecordQueue         queueIn;
-AudioConnection          patchCord1(queueOut, 0, audio_out, 0);
-AudioConnection          patchCord2(queueOut, 0, audio_out, 1);
-//AudioConnection          patchCord3(audio_SD, 0, queueIn, 0);
-AudioConnection          patchCord3(waveform1, 0, queueIn, 0);
+AudioConnection          patchCord1(audio_in, 1, queueIn, 0);
+//AudioConnection          patchCord1(waveform1, 0, queueIn, 0);
+AudioConnection          patchCord2(queueOut, 0, audio_out, 0);
+AudioConnection          patchCord3(queueOut, 0, audio_out, 1);
 AudioControlSGTL5000     sgtl5000_1;
+
+//AudioInputI2S            i2s2;           //xy=126.0000057220459,279.00000381469727
+//AudioPlayQueue           queue2;         //xy=130.00003051757812,338.66668128967285
+//AudioRecordQueue         queue1;         //xy=277.0000114440918,266.6666793823242
+//AudioOutputI2S           i2s1;           //xy=319.0000686645508,339.6666784286499
+//AudioConnection          patchCord1(i2s2, 1, queue1, 0);
+//AudioConnection          patchCord2(queue2, 0, i2s1, 0);
+//AudioConnection          patchCord3(queue2, 0, i2s1, 1);
+//AudioControlSGTL5000     sgtl5000_1;     //xy=10
 /***************** GUItool: end automatically generated code *****************/
 
 /***************** Global variables *****************/
@@ -67,11 +77,10 @@ void setup() {
   fft_init(&fftInst, fftLen, fftFlag, bitReverseFlag);
   fft_init(&ifftInst, fftLen, ifftFlag, bitReverseFlag);
   create_sqrthann_window(win, FFT_LEN);
-  delay(1000);
-  queueIn.begin();
-  //audio_SD.play("piano.wav");
-  delay(50);
-  time = micros();
+//  delay(1000);
+////  audio_SD.play("piano.wav");
+//  delay(50);
+//  time = micros();
 }
 
 void loop() {
@@ -83,7 +92,7 @@ void loop() {
   
 
   
-/*  if(audio_SD.isPlaying() && read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
+ /* if(audio_SD.isPlaying() && read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
     // copy input signal in arrayIn in blocks
     // copy elements in buffer
     for(i=0; i<QUEUE_LEN; i++) {
@@ -118,7 +127,7 @@ void loop() {
     
     smearing_comp(frameC, B, FFT_LEN, FS);
     //AudioNoInterrupts();
-    //delayMicroseconds(7000);      // = QUEUE_LEN/fs
+    //delayMicroseconds(2000);      // = QUEUE_LEN/fs
     //AudioInterrupts();
     //Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n");
     
@@ -155,14 +164,6 @@ void loop() {
     }
     Serial.print((micros()-time)); Serial.println(" us");
   }
-  
-  /*if(millis()-time>=250) {
-    digitalWrite(13,HIGH);
-  }
-  if(millis()-time>=500) {
-    digitalWrite(13,LOW);
-    time=millis();
-  }*/
 }
 
 
@@ -171,22 +172,26 @@ void loop() {
 void set_periph(void) {
   // set audio shield and SD card
   Serial.begin(9600);
-  AudioMemory(300);
+  AudioMemory(200);
   sgtl5000_1.enable();
-  sgtl5000_1.volume(0.35);
-  SPI.setMOSI(SDCARD_MOSI_PIN);
-  SPI.setSCK(SDCARD_SCK_PIN);
-  if (!(SD.begin(SDCARD_CS_PIN))) {
-    while (1) {
-      Serial.println(F("Unable to access the SD card"));
-      delay(500);
-    }
-  }
-  waveform1.begin(WAVEFORM_TRIANGLE);
-  waveform1.frequency(AUDIO_SAMPLE_RATE_EXACT/FS*freq);
-  waveform1.amplitude(0.65); 
+  sgtl5000_1.volume(0.5);
+  sgtl5000_1.inputSelect(AUDIO_INPUT_LINEIN);
+  sgtl5000_1.micGain(30);
+  queueIn.begin();
   setI2SFreq(FS);
-  pinMode(13, OUTPUT); // LED on pin 13
+  delay(1000);
+//  SPI.setMOSI(SDCARD_MOSI_PIN);
+//  SPI.setSCK(SDCARD_SCK_PIN);
+//  if (!(SD.begin(SDCARD_CS_PIN))) {
+//    while (1) {
+//      Serial.println(F("Unable to access the SD card"));
+//      delay(500);
+//    }
+//  }
+//  waveform1.begin(WAVEFORM_TRIANGLE);
+//  waveform1.frequency(AUDIO_SAMPLE_RATE_EXACT/FS*freq);
+//  waveform1.amplitude(0.65); 
+  //queueIn.begin();
 }
 /***************** util functions *****************/
 
