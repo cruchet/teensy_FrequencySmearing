@@ -28,16 +28,16 @@ AudioControlSGTL5000     sgtl5000_1;
 //#define SDCARD_CS_PIN    10                // teensy 3.2
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14
-#define FFT_LEN			     256
+#define FFT_LEN           256
 #define SIG_LEN          FFT_LEN*50
 #define FFT_FLAG         0
 #define IFFT_FLAG        1
 
 // FFT variables
-uint16_t 	fftLen         = FFT_LEN;
-uint8_t 	fftFlag        = 0;
+uint16_t  fftLen         = FFT_LEN;
+uint8_t   fftFlag        = 0;
 uint8_t   ifftFlag       = 1;
-uint8_t 	bitReverseFlag  = 1;
+uint8_t   bitReverseFlag  = 1;
 arm_cfft_radix4_instance_f32 fftInst;
 arm_cfft_radix4_instance_f32 ifftInst;
 
