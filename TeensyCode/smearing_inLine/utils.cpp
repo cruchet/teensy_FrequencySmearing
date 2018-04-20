@@ -32,12 +32,17 @@ void create_sqrthann_window(float win[], int win_l){
 
 // initialize fft and test for errors
 void fft_init(arm_cfft_radix2_instance_f32* fftInst, uint16_t fftLen, uint8_t fftFlag, uint8_t bitReverseFlag) {
-  Serial.print(F("initialize FFT...  "));
+  if(fftFlag == 0) {
+    Serial.print(F("initialize FFT...  "));
+  }
+  else if(fftFlag == 1){
+    Serial.print(F("initialize IFFT...  "));
+  }
   arm_status fft_status = ARM_MATH_TEST_FAILURE;
   
   fft_status   = arm_cfft_radix2_init_f32(fftInst, fftLen, fftFlag, bitReverseFlag);
   if (fft_status != ARM_MATH_SUCCESS) {
-    Serial.println(F("error in initializing FFT"));
+    Serial.print(F("error in initializing FFT: "));
     if(fft_status == ARM_MATH_ARGUMENT_ERROR) {
       Serial.println(F("ARM_MATH_ARGUMENT_ERROR"));
     }
@@ -45,7 +50,7 @@ void fft_init(arm_cfft_radix2_instance_f32* fftInst, uint16_t fftLen, uint8_t ff
       Serial.println();
     }
   }
-  Serial.print(F("done\t")); Serial.println(fft_status);
+  Serial.println(F("done\t"));
 }
 
 // Allows to change the audio shield's I2S sampling frequency. Will not work with audio from the SD card.
@@ -86,5 +91,6 @@ void setI2SFreq(int freq) {
       return;
     }
   }
+  Serial.println(F("ERROR: unvalid sampling rate for setI2SFreq()"));
 }
 

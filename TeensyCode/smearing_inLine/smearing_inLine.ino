@@ -24,6 +24,7 @@
 #include <SD.h>
 #include <SerialFlash.h>
 #include <CircularBuffer.h>
+#include <Bounce2.h>
 #include <math.h>
 
 #include "Arduino.h"
@@ -46,22 +47,15 @@ AudioConnection          patchCord1(audio_in, 1, queueIn, 0);
 AudioConnection          patchCord2(queueOut, 0, audio_out, 0);
 AudioConnection          patchCord3(queueOut, 0, audio_out, 1);
 AudioControlSGTL5000     sgtl5000_1;
-
-//AudioInputI2S            i2s2;           //xy=126.0000057220459,279.00000381469727
-//AudioPlayQueue           queue2;         //xy=130.00003051757812,338.66668128967285
-//AudioRecordQueue         queue1;         //xy=277.0000114440918,266.6666793823242
-//AudioOutputI2S           i2s1;           //xy=319.0000686645508,339.6666784286499
-//AudioConnection          patchCord1(i2s2, 1, queue1, 0);
-//AudioConnection          patchCord2(queue2, 0, i2s1, 0);
-//AudioConnection          patchCord3(queue2, 0, i2s1, 1);
-//AudioControlSGTL5000     sgtl5000_1;     //xy=10
 /***************** GUItool: end automatically generated code *****************/
 
 /***************** Global variables *****************/
 float           win[FFT_LEN];     // vector for window function
-unsigned long   time = 0;
-unsigned int    count =0;
-int             freq = 500;       // frequency for the waveform
+unsigned long   time      = 0;
+unsigned int    count     = 0;
+int             freq      = 500;       // frequency for the waveform
+Bounce          button1   = Bounce();
+bool            smearFlag = false;
 // FFT variables
 uint16_t  fftLen          = FFT_LEN;
 uint8_t   fftFlag         = 0;
@@ -77,8 +71,7 @@ void setup() {
   fft_init(&fftInst, fftLen, fftFlag, bitReverseFlag);
   fft_init(&ifftInst, fftLen, ifftFlag, bitReverseFlag);
   create_sqrthann_window(win, FFT_LEN);
-//  delay(1000);
-////  audio_SD.play("piano.wav");
+//  audio_SD.play("piano.wav");
 //  delay(50);
 //  time = micros();
 }
@@ -89,8 +82,9 @@ void loop() {
   float frameR[FFT_LEN];      // real value frame
   float frameC[2*FFT_LEN];    // complex value frame {real(0],imag(0),real(1),imag(1),...}
   int i=0;
-  
 
+  // read button to (des-)activate smearing
+  read_button();
   
  /* if(audio_SD.isPlaying() && read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
     // copy input signal in arrayIn in blocks
@@ -109,7 +103,7 @@ void loop() {
 
   // process the frame
   if(buffIn.size() > FFT_LEN) { 
-    time = micros();     
+//    time = micros();     
     read_frame_from_buffer(frameR, FFT_LEN);
           
     // window the frame and create complex frame
@@ -122,14 +116,15 @@ void loop() {
     // compute FFT
     //Serial.println(F("compute FFT"));
     arm_cfft_radix2_f32(&fftInst, frameC);
-  
-    // process smearing
-    
-    smearing_comp(frameC, B, FFT_LEN, FS);
-    //AudioNoInterrupts();
-    //delayMicroseconds(2000);      // = QUEUE_LEN/fs
-    //AudioInterrupts();
-    //Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n");
+
+    if(smearFlag) {
+      // process smearing
+      smearing_comp(frameC, B, FFT_LEN, FS);
+      //AudioNoInterrupts();
+      //delayMicroseconds(2000);      // = QUEUE_LEN/fs
+      //AudioInterrupts();
+      //Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n");
+    }
     
     // compute IFFT
     arm_cfft_radix2_f32(&ifftInst, frameC);
@@ -162,7 +157,7 @@ void loop() {
       arm_float_to_q15(arrayOut, pOut, QUEUE_LEN);    
       queueOut.playBuffer();
     }
-    Serial.print((micros()-time)); Serial.println(" us");
+//    Serial.print((micros()-time)); Serial.println(" us");
   }
 }
 
@@ -170,6 +165,11 @@ void loop() {
 /***************** util functions *****************/
 // initialize SD card and other devices
 void set_periph(void) {
+  // Setup the button with an internal pull-up :
+  pinMode(BUTTON1_PIN,INPUT_PULLUP);
+  button1.attach(BUTTON1_PIN);
+  button1.interval(5); // interval in ms
+  
   // set audio shield and SD card
   Serial.begin(9600);
   AudioMemory(200);
@@ -177,9 +177,9 @@ void set_periph(void) {
   sgtl5000_1.volume(0.5);
   sgtl5000_1.inputSelect(AUDIO_INPUT_LINEIN);
   sgtl5000_1.micGain(30);
-  queueIn.begin();
   setI2SFreq(FS);
   delay(1000);
+  queueIn.begin();
 //  SPI.setMOSI(SDCARD_MOSI_PIN);
 //  SPI.setSCK(SDCARD_SCK_PIN);
 //  if (!(SD.begin(SDCARD_CS_PIN))) {
@@ -191,7 +191,22 @@ void set_periph(void) {
 //  waveform1.begin(WAVEFORM_TRIANGLE);
 //  waveform1.frequency(AUDIO_SAMPLE_RATE_EXACT/FS*freq);
 //  waveform1.amplitude(0.65); 
-  //queueIn.begin();
 }
+
+void read_button(void) {
+  if(button1.update()) {
+    if(button1.read() == HIGH) {
+      if(smearFlag) {
+        smearFlag = false;
+        Serial.println(F("Desactivate frequency smearing"));
+      }
+      else if(!smearFlag) {
+        smearFlag = true;
+        Serial.println(F("Activate frequency smearing"));
+      }
+    }
+  }
+}
+
 /***************** util functions *****************/
 
