@@ -27,13 +27,13 @@
 #include <Bounce2.h>
 #include <math.h>
 
+#include "global.h"
 #include "Arduino.h"
 #include "arm_math.h"
 #include "RamMonitor.h"
 #include "smearing.h"
 #include "circ_buff_util.h"
 #include "utils.h"
-#include "global.h"
 
 /***************** GUItool: begin automatically generated code *****************/
 //AudioPlaySdWav           audio_SD;

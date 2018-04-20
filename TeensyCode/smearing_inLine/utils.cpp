@@ -23,10 +23,15 @@ void create_sqrthann_window(float win[], int win_l){
   int i=0;
   q15_t     max     = 0;
   uint32_t  max_idx = 0;
-  
-  arm_max_q15((q15_t*)AudioWindowHanning256, win_l, &max, &max_idx);
-  for(i=0; i<win_l; i++) {
-    win[i] = sqrt((float)AudioWindowHanning256[i] / max);
+
+  if(win_l == 256) {
+    arm_max_q15((q15_t*)AudioWindowHanning256, win_l, &max, &max_idx);
+    for(i=0; i<win_l; i++) {
+      win[i] = sqrt((float)AudioWindowHanning256[i] / max);
+    }
+  }
+  else {
+    Serial.println(F("ERROR in create_sqrthann_window: unvalid window length"));
   }
 }
 
@@ -42,7 +47,7 @@ void fft_init(arm_cfft_radix2_instance_f32* fftInst, uint16_t fftLen, uint8_t ff
   
   fft_status   = arm_cfft_radix2_init_f32(fftInst, fftLen, fftFlag, bitReverseFlag);
   if (fft_status != ARM_MATH_SUCCESS) {
-    Serial.print(F("error in initializing FFT: "));
+    Serial.print(F("error in initializing FFT"));
     if(fft_status == ARM_MATH_ARGUMENT_ERROR) {
       Serial.println(F("ARM_MATH_ARGUMENT_ERROR"));
     }

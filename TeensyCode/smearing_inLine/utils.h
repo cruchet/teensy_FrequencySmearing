@@ -6,7 +6,8 @@
 // creates a normalized hann window
 void create_hann_window(float win[], int win_l);
 
-// creates a normalized sqrt(hann) window
+// creates a normalized sqrt(hann) window 
+// /!\ the audio library has defined windows only for 256 samples!
 void create_sqrthann_window(float win[], int win_l);
 
 // initialize fft and test for errors
