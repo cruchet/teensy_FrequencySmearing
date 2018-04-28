@@ -3,7 +3,7 @@
 %
 % This script loads an audio file and apply frequency smearing 
 % to its spectrum. Input signal is processed frame by frame and 
-% reconstructed unsing overlap-and-add method.
+% reconstructed using overlap-and-add method.
 %
 % Author:	Vassili Cruchet, vassili.cruchet@gmail.com
 % 
@@ -17,31 +17,30 @@ close all
 clc
 %% load or create audio signal
 clc
-saveFile = 0;	% boolean to save files
+saveFile = 1;	% boolean to save files
 signalName = 'sine1k2k4k';	% name to save
 
 % uncomment to use a external audio file
-	filename = ['sounds' filesep 'cocktailparty.wav'];
-	[signal fs] = audioread(filename);
+% 	filename = ['sounds' filesep 'piano.wav'];
+% 	[signal fs] = audioread(filename);
 	% add some conversation shaped noise
-	% [noise fsNoise] = audioread(['sounds' filesep '07_icra_7.wav'], [1 length(signal)]);
-	%signal = signal/max(abs(signal)) + 0.5*noise(:,1)/max(abs(noise(:,1)));
+% 	[noise fsNoise] = audioread(['sounds' filesep '07_icra_7.wav'], [1 length(signal)]);
+% 	signal = signal/max(abs(signal)) + 0.3*noise(:,1)/max(abs(noise(:,1)));
 
-% % uncomment to synthesize input signal
-% 	fs = 16000;				% sampling frequency
-% 	T = 5;					% signal duration
-% 	f = 1000;				% signal fundammental frequency
-% 	t = [0:1/fs:T-1/fs];	% time vector
-% 	signal = (sin(2*pi*f*t))' +  0.75*(sin(2*pi*2*f*t))' ...
-% 	 	+  0.5*(sin(2*pi*4*f*t))';
-% 	% add some noise
+% uncomment to synthesize input signal
+	fs = 16000;				% sampling frequency
+	T = 5;			% signal duration
+	f = 1000;				% signal fundammental frequency
+	t = [0:1/fs:T-1/fs];	% time vector
+	signal = (sin(2*pi*f*t))' +  0.75*(sin(2*pi*2*f*t))' +  0.5*(sin(2*pi*4*f*t))';
+	% add some noise
 % 	signal = signal + 0.05*randn(length(signal),1);
 
 % block processing parameters
-l_win = 2048;	% frame length (should be a power of 2, smaller than 10000
+l_win = 256;	% frame length (should be a power of 2, smaller than 10000
 overlap = 0.5;	% percentage of overlap
 l_sig	= length(signal);
-b = 3;			% broadening factor
+b = 6;			% broadening factor
 
 % truncate signal to a multilple of frame length multiplied by overlap
 n_win = floor(l_sig/(l_win*overlap));		% number of frames 
@@ -57,7 +56,6 @@ close all
 A_s = calc_smear_matrix(fs, l_win, b);
 
 signal_smear = zeros(1,l_sig);
-
 % process frame by frame
 for k=0:n_win-1/overlap
 	% set window
@@ -100,14 +98,14 @@ end
 close all
 % time domain
 figure('Position',[50 150 500 400])
-plot(signal_smear,'r-','LineWidth',1);		grid on; hold on;
-plot(signal,'b--','LineWidth',1);
+plot(signal_smear/max(abs(signal_smear)),'r-','LineWidth',1);		grid on; hold on;
+plot(signal/max(abs(signal)),'b','LineWidth',0.5);
 legend(['smeared (b=' num2str(b) ')'], 'normal');
 xlabel('#samples');
 ylabel('amplitude');
-
+xlim([1e4 1.01e4]);		ylim([-1.2 1.2]);
 if saveFile
-	print(['outputs' filesep 'block_proc_time_' signalName '.pdf'], '-dpdf');
+	print(['outputs' filesep 'block_proc_time_' signalName '.eps'], '-depsc');
 end	
 
 % spectrum
@@ -120,14 +118,17 @@ figure('Position',[550 150 500 400])
 %	semilogx(fVec,db(spec),'b','LineWidth',0.5);		
 % uncomment to use linear scale
 	plot(fVec, db(spec_smear),'r-'); hold on; grid on;
-	plot(fVec, db(spec),'b-'); 
+	plot(fVec, db(spec),'b'); 
 	
-xlim([0 fs/2]);				ylim([-80 0]);
+xlim([0 fs/2]);				ylim([-100 0]);
 xlabel('Frequency [Hz]');	ylabel('Magnitude [dB]');
 legend(['smeared (b=' num2str(b) ')'], 'normal');
 
 if saveFile
-	print(['outputs' filesep 'block_proc_spec' signaName '.pdf'], '-dpdf');
-	audiowrite(['outputs' filesep 'block_proc_' signaName '.wav'], ...
-		signal_smear/max(abs(signal_smear)), fs);
+	print(['outputs' filesep 'block_proc_spec' signalName '.eps'], '-depsc');
+% 	audiowrite(['outputs' filesep 'block_proc_' signaName '.wav'], ...
+% 		signal_smear/max(abs(signal_smear)), fs);
 end	
+
+%%
+soundsc(signal_smear,fs);

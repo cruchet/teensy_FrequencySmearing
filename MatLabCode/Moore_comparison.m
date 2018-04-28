@@ -30,10 +30,10 @@ l_sig	= length(signal);
 b = 3;										% broadening factor
 
 % uncomment to low pass filter the signal at 7kHz
-% 	fc=7000;
-% 	wl = [0 fc/(fs/2)];		wh = [fc/(fs/2) 1];		Gp = [0 -100];
-% 	[IR IR_win] = FIR_eq(wl, wh, Gp, 101, 0.7);
-% 	signal = filter(IR_win,1,signal);
+	fc=7000;
+	wl = [0 fc/(fs/2)];		wh = [fc/(fs/2) 1];		Gp = [0 -100];
+	[IR IR_win] = FIR_eq(wl, wh, Gp, 101, 0.7);
+	signal = filter(IR_win,1,signal);
 
 %% process with frames of length l_win
 % Each frame is zero-padded at both ends with 64 zeros to increase
@@ -101,7 +101,7 @@ for k=0:n_win-1/overlap
 		[S_y fvec]=make_spectrum(y,fs);
 		fig_tit = ['short-term spectra comparison, b=' num2str(b)];
 		H=figure(1);
-		set(gcf,'Units','normalized','Position',[0.1 0.1 0.65 0.7]);
+		set(gcf,'Units','normalized','Position',[0 0 1 1]);
 		subplot(4,3,1+3*(k-num))
 			plot(fvec/1000,fftshift(db(spec_pow)),'b');	% clean spectrum
 			xlim([0 fs/2000]); ylim([-50 20]);
@@ -164,7 +164,12 @@ for k=0:n_win-1/overlap
 		title('Output');
 	end	
 end
-
+if saveFile
+	figure(1);
+	print(['outputs' filesep 'moore_comp_spec.eps'], '-depsc');
+	figure(2);
+	print(['outputs' filesep 'moore_comp_time.eps'], '-depsc');
+end	
 %% plot 
 % Plot the final results
 close all

@@ -41,23 +41,25 @@ Y = smearing(abs(X), A_s);
 y = real(ifft(Y.*exp(i*unwrap(angle(X)))));
 
 %% plots
+clc
 close all
-
+saveFile = 1;
 % time domain
-figure('Units','normalized','Position', [0.1 0.4 0.3 0.35]);
-plot(t,x,t,y);	hold on; grid on;
+figure('Units','normalized','Position', [0.1 0.4 0.35 0.35]);
+plot(t,x/max(x),t,y/max(y));	hold on; grid on;
 xlabel('Time [s]');		ylabel('Amplitude');
 legend('normal',['smeared, b = ' num2str(b)]);
+xlim([0.005 0.01]);		ylim([-1.1 1.1]);
 % save plot
 if saveFile
-	print(['outputs' filesep 'smear_time_sine_1k2k4k.pdf'], '-dpdf');
+	print(['outputs' filesep 'smear_time_' signalName '.eps'], '-depsc');
 end
 
 % spectrum
 [spec fVec]			= make_spectrum(x,fs);
 [spec_smear fVec]	= make_spectrum(y,fs);
 
-figure('Units','normalized','Position', [0.4 0.4 0.3 0.35]);
+figure('Units','normalized','Position', [0.5 0.4 0.35 0.35]);
 plot(fVec,db(spec),'Linewidth',1);		hold on; grid on;
 plot(fVec,db(spec_smear),'Linewidth',1);
 xlim([0 fs/2]);				ylim([-200 0]);
@@ -66,9 +68,8 @@ legend('normal',['smeared, b = ' num2str(b)]);
 
 % save spectrum plot and normalized audio file
 if saveFile
-	print(['outputs' filesep 'smear_spec_' signalName '.pdf'], '-dpdf');
-	audiowrite(['outputs' filesep 'smear_' signalName '.wav'], ...
-		y/max(abs(y)), fs);
+	print(['outputs' filesep 'smear_spec_' signalName '.eps'], '-depsc');
+% 	audiowrite(['outputs' filesep 'smear_' signalName '.wav'], y/max(abs(y)), fs);
 end	
 
 
