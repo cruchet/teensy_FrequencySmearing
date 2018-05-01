@@ -1,12 +1,14 @@
 /**
  * smearing_infLine.ino
- * Process frequency smearing on a .wav file stored on the SD card, 
- * using block processing and circular buffer to achieve overlap-and-add.
+ * Process frequency smearing on the line input of the audio shield and plays it
+ * in real-time. It uses block processing and circular buffer to achieve overlap-and-add.
  * 
- * Changing parameters as b (smearing coefficient), frame lenght and smapling frequency
- * induce recalculating smearing matrix with MatLab script "generate_smear_matrix".
- * However, the audioSD block only support fs=44.1kHz and the fft function works only for
- * frame length of 16, 64, 256, 1024 samples.
+ * Several combination of parameters  as b (smearing coefficient), frame lenght and 
+ * sampling frequency are already coded in smear_mat.h but if other parameters are wanted,
+ * a new smearing matrix must be calculated with MatLab script "generate_smear_matrix".
+ * Changing paramters always induce recompiling.
+ * The choice of parameters is limited. See setI2SFreq() for availble fs. The fft functions 
+ * work only for frame length of 16, 64, 256, 1024 samples.
  * 
  * Author:
  *      Vassili Cruchet
@@ -36,8 +38,7 @@
 #include "utils.h"
 
 /***************** GUItool: begin automatically generated code *****************/
-//AudioPlaySdWav           audio_SD;
-//AudioSynthWaveform       waveform1;  
+//AudioSynthWaveform       waveform1;       // a waveform genreator can also be used
 AudioInputI2S            audio_in;
 AudioOutputI2S           audio_out;
 AudioPlayQueue           queueOut;         
@@ -65,34 +66,25 @@ arm_cfft_radix2_instance_f32 fftInst;
 arm_cfft_radix2_instance_f32 ifftInst;
 /***************** end of global variables *****************/
 
-
 void setup() {
   set_periph();
   fft_init(&fftInst, fftLen, fftFlag, bitReverseFlag);
   fft_init(&ifftInst, fftLen, ifftFlag, bitReverseFlag);
   create_sqrthann_window(win, FFT_LEN);
-//  audio_SD.play("piano.wav");
-//  delay(50);
-//  time = micros();
+  queueIn.begin();          // should always be the last setup operation to avoid delay
 }
 
 void loop() {
   float arrayIn[QUEUE_LEN];
   float arrayOut[QUEUE_LEN];
   float frameR[FFT_LEN];      // real value frame
-  float frameC[2*FFT_LEN];    // complex value frame {real(0],imag(0),real(1),imag(1),...}
+  float frameC[2*FFT_LEN];    // complex value frame {real(0),imag(0),real(1),imag(1),...}
   int i=0;
 
   // read button to (des-)activate smearing
   read_button();
-  
- /* if(audio_SD.isPlaying() && read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
-    // copy input signal in arrayIn in blocks
-    // copy elements in buffer
-    for(i=0; i<QUEUE_LEN; i++) {
-      buffIn.push(arrayIn[i]);
-    } 
-  }*/
+
+  time = micros();
   if(read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
     // copy input signal in arrayIn in blocks
     // copy elements in buffer
@@ -103,7 +95,6 @@ void loop() {
 
   // process the frame
   if(buffIn.size() > FFT_LEN) { 
-//    time = micros();     
     read_frame_from_buffer(frameR, FFT_LEN);
           
     // window the frame and create complex frame
@@ -120,10 +111,8 @@ void loop() {
     if(smearFlag) {
       // process smearing
       smearing_comp(frameC, B, FFT_LEN, FS);
-      //AudioNoInterrupts();
-      //delayMicroseconds(2000);      // = QUEUE_LEN/fs
-      //AudioInterrupts();
-      //Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n");
+      //delayMicroseconds(2000);      // this can be used to test the maximal processing delay.
+      //Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n"); // diplay the processing time
     }
     
     // compute IFFT
@@ -135,7 +124,6 @@ void loop() {
     }
   
     // do overlapp and add ine the buffer
-    //Serial.println(buffOut.size());
     if(buffOut.size() < FFT_LEN/2){      // first time
       for(i=0; i<FFT_LEN; i++) {
         buffOut.push(frameR[i]);
@@ -157,7 +145,7 @@ void loop() {
       arm_float_to_q15(arrayOut, pOut, QUEUE_LEN);    
       queueOut.playBuffer();
     }
-//    Serial.print((micros()-time)); Serial.println(" us");
+//    Serial.print((micros()-time)); Serial.println(" us"); // displays the total loop time
   }
 }
 
@@ -167,6 +155,7 @@ void loop() {
 void set_periph(void) {
   // Setup the button with an internal pull-up :
   pinMode(BUTTON1_PIN,INPUT_PULLUP);
+  pinMode(LED_PIN,OUTPUT);
   button1.attach(BUTTON1_PIN);
   button1.interval(5); // interval in ms
   
@@ -179,15 +168,8 @@ void set_periph(void) {
   sgtl5000_1.micGain(30);
   setI2SFreq(FS);
   delay(1000);
-  queueIn.begin();
-//  SPI.setMOSI(SDCARD_MOSI_PIN);
-//  SPI.setSCK(SDCARD_SCK_PIN);
-//  if (!(SD.begin(SDCARD_CS_PIN))) {
-//    while (1) {
-//      Serial.println(F("Unable to access the SD card"));
-//      delay(500);
-//    }
-//  }
+  
+  // if the waveform generator is used
 //  waveform1.begin(WAVEFORM_TRIANGLE);
 //  waveform1.frequency(AUDIO_SAMPLE_RATE_EXACT/FS*freq);
 //  waveform1.amplitude(0.65); 
@@ -198,10 +180,12 @@ void read_button(void) {
     if(button1.read() == HIGH) {
       if(smearFlag) {
         smearFlag = false;
+        digitalWrite(LED_PIN,LOW);
         Serial.println(F("Desactivate frequency smearing"));
       }
       else if(!smearFlag) {
         smearFlag = true;
+        digitalWrite(LED_PIN,HIGH);
         Serial.println(F("Activate frequency smearing"));
       }
     }

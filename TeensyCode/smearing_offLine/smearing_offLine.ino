@@ -3,10 +3,12 @@
  * Process frequency smearing on a .wav file stored on the SD card, 
  * using block processing and circular buffer to achieve overlap-and-add.
  * 
- * Changing parameters as b (smearing coefficient), frame lenght and smapling frequency
- * induce recalculating smearing matrix with MatLab script "generate_smear_matrix".
- * However, the audioSD block only support fs=44.1kHz and the fft function works only for
- * frame length of 16, 64, 256, 1024 samples.
+ * Several combination of parameters  as b (smearing coefficient), frame lenght and 
+ * sampling frequency are already coded in smear_mat.h but if other parameters are wanted,
+ * a new smearing matrix must be calculated with MatLab script "generate_smear_matrix".
+ * Changing paramters always induce recompiling.
+ * The choice of parameters is limited. See setI2SFreq() for availble fs. The fft functions 
+ * work only for frame length of 16, 64, 256, 1024 samples.
  * 
  * Author:
  *      Vassili Cruchet
@@ -36,14 +38,12 @@
 
 /***************** GUItool: begin automatically generated code *****************/
 AudioPlayQueue           queueOut;         
-//AudioPlaySdWav           audio_SD;
-AudioSynthWaveform       waveform1;    
+AudioPlaySdWav           audio_SD;
 AudioOutputI2S           audio_out;
 AudioRecordQueue         queueIn;
 AudioConnection          patchCord1(queueOut, 0, audio_out, 0);
 AudioConnection          patchCord2(queueOut, 0, audio_out, 1);
-//AudioConnection          patchCord3(audio_SD, 0, queueIn, 0);
-AudioConnection          patchCord3(waveform1, 0, queueIn, 0);
+AudioConnection          patchCord3(audio_SD, 0, queueIn, 0);
 AudioControlSGTL5000     sgtl5000_1;
 /***************** GUItool: end automatically generated code *****************/
 
@@ -61,7 +61,6 @@ arm_cfft_radix2_instance_f32 fftInst;
 arm_cfft_radix2_instance_f32 ifftInst;
 /***************** end of global variables *****************/
 
-
 void setup() {
   set_periph();
   fft_init(&fftInst, fftLen, fftFlag, bitReverseFlag);
@@ -69,7 +68,7 @@ void setup() {
   create_sqrthann_window(win, FFT_LEN);
   delay(1000);
   queueIn.begin();
-  //audio_SD.play("piano.wav");
+  audio_SD.play("piano.wav");  // choose an audio file from the SD card
   delay(50);
   time = micros();
 }
@@ -81,16 +80,7 @@ void loop() {
   float frameC[2*FFT_LEN];    // complex value frame {real(0],imag(0),real(1),imag(1),...}
   int i=0;
   
-
-  
-/*  if(audio_SD.isPlaying() && read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
-    // copy input signal in arrayIn in blocks
-    // copy elements in buffer
-    for(i=0; i<QUEUE_LEN; i++) {
-      buffIn.push(arrayIn[i]);
-    } 
-  }*/
-  if(read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
+  if(audio_SD.isPlaying() && read_array_form_queue(arrayIn, QUEUE_LEN, &queueIn)) {
     // copy input signal in arrayIn in blocks
     // copy elements in buffer
     for(i=0; i<QUEUE_LEN; i++) {
@@ -116,11 +106,8 @@ void loop() {
   
     // process smearing
     
-    smearing_comp(frameC, B, FFT_LEN, FS);
-    //AudioNoInterrupts();
-    //delayMicroseconds(7000);      // = QUEUE_LEN/fs
-    //AudioInterrupts();
-    //Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n");
+//    smearing_comp(frameC, B, FFT_LEN, FS);
+//    Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n"); // display smearing time
     
     // compute IFFT
     arm_cfft_radix2_f32(&ifftInst, frameC);
@@ -153,16 +140,8 @@ void loop() {
       arm_float_to_q15(arrayOut, pOut, QUEUE_LEN);    
       queueOut.playBuffer();
     }
-    Serial.print((micros()-time)); Serial.println(" us");
+//    Serial.print((micros()-time)); Serial.println(" us"); // display total loop time
   }
-  
-  /*if(millis()-time>=250) {
-    digitalWrite(13,HIGH);
-  }
-  if(millis()-time>=500) {
-    digitalWrite(13,LOW);
-    time=millis();
-  }*/
 }
 
 
@@ -182,10 +161,6 @@ void set_periph(void) {
       delay(500);
     }
   }
-  waveform1.begin(WAVEFORM_TRIANGLE);
-  waveform1.frequency(AUDIO_SAMPLE_RATE_EXACT/FS*freq);
-  waveform1.amplitude(0.65); 
-  setI2SFreq(FS);
   pinMode(13, OUTPUT); // LED on pin 13
 }
 /***************** util functions *****************/

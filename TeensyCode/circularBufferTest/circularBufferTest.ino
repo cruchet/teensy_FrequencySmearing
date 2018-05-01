@@ -9,9 +9,8 @@
 #include "Arduino.h"
 #include "arm_math.h"
 //#include "smearing.h"
-
-#define FFT_LEN           256
-#define QUEUE_LEN         128
+#include "circ_buff_util.h"
+#include "global.h"
 
 // GUItool: begin automatically generated code
 AudioPlayQueue           queueOut;         //xy=113.00000762939453,403.600040435791
@@ -28,9 +27,6 @@ AudioControlSGTL5000     sgtl5000_1;     //xy=135.00000762939453,482.00003433227
 //#define SDCARD_CS_PIN    10              // teensy 3.2
 #define SDCARD_MOSI_PIN  7
 #define SDCARD_SCK_PIN   14
-
-CircularBuffer<float, 10*FFT_LEN> buffIn;
-CircularBuffer<float, 10*FFT_LEN> buffOut;
 
 float win[FFT_LEN];
 unsigned long time = 0;
@@ -54,7 +50,7 @@ void loop() {
   
   //if(audio_SD.isPlaying()) {
     // copy input signal in arrayIn in block of FFT_LEN/2
-    read_array_form_queue(arrayIn, FFT_LEN/2);
+    read_array_form_queue(arrayIn, FFT_LEN/2, &queueIn);
 
     // copy elements in buffer
     for(i=0; i<FFT_LEN/2; i++) {
@@ -62,7 +58,7 @@ void loop() {
     }
 
     // process the frame
-    if(buffIn.size() > FFT_LEN) {
+    if(buffIn.size() > FFT_LEN) {      
       read_frame_from_buffer(frame, FFT_LEN);
             
       // window the frame
@@ -118,57 +114,6 @@ void copy_array_float(float dst[], float src[], int length) {
   
   for(i=0; i<length; i++) {
     dst[i] = src[i];
-  }
-}
-
-// process overlapp and add in the output buffer
-void overlap_add(float frame[], int array_length) {
-  int i=0;
-
-  // overalp first half
-  for(i=array_length/2-1; i>=0; i--) {
-    frame[i] += buffOut.pop();
-  }
-  // push back the whole frame (to tail)
-  for(i=0; i<array_length; i++) {
-    buffOut.push(frame[i]);
-  }
-}
-
-// copy input signal in arrayIn in block of FFT_LEN/2
-void read_array_form_queue(float arrayIn[], int array_length) {
-  int i=0;
-  int k=0;
-  int16_t* temp;
-
-  if(array_length%QUEUE_LEN==0) {
-    while(queueIn.available()<=array_length/QUEUE_LEN) { 
-    }     // wait to have enough samples
-    
-    for(i=0; i<array_length/QUEUE_LEN; i++) {
-      temp = queueIn.readBuffer();
-      queueIn.freeBuffer();
-      for(k=0; k<QUEUE_LEN; k++) {
-        arrayIn[k+i*QUEUE_LEN] = (float)temp[k];
-      }
-    }
-  }
-  else {
-    Serial.println(F("error in read_array_form_queue: array_length must be a multiple of QUEUE_LEN"));
-  }  
-}
-
-// read elements in buffIn with 50% overlap to create frame
-void read_frame_from_buffer(float frame[], int frame_l) {
-  int i=0;
-  
-  //read first half and remove it from buffIn
-  for(i=0;i<frame_l/2;i++) {
-    frame[i] = buffIn.shift();
-  }
-  // read 2nd half but leave it for next frame (overlap)
-  for(i=frame_l/2; i<frame_l; i++) {
-    frame[i] = buffIn[i-frame_l/2];  
   }
 }
 

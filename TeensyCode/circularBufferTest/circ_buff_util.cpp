@@ -4,8 +4,9 @@
 #include <Audio.h>
 #include "Arduino.h"
 
-CircularBuffer<float, BUFF_LEN> buffIn;
-CircularBuffer<float, BUFF_LEN> buffOut;
+CircularBuffer<float, 10*FFT_LEN> buffIn;
+CircularBuffer<float, 10*FFT_LEN> buffOut;
+
 
 // process overlapp and add in the output buffer
 void overlap_add(float frame[], int array_length) {
@@ -21,25 +22,27 @@ void overlap_add(float frame[], int array_length) {
   }
 }
 
-// copy input signal in arrayIn in blocks. Retruns 0 if queue is not big enough
-int read_array_form_queue(float arrayIn[], int array_length, AudioRecordQueue* queueIn) {
+// copy input signal in arrayIn in block of FFT_LEN/2
+void read_array_form_queue(float arrayIn[], int array_length, AudioRecordQueue* queueIn) {
   int i=0;
+  int k=0;
+  int16_t* temp;
 
   if(array_length%QUEUE_LEN==0) {
-    if(queueIn->available()<array_length/QUEUE_LEN) { 
-      return 0;     // not enough samples in queue
-    }
-
+    while(queueIn->available()<=array_length/QUEUE_LEN) { 
+    }     // wait to have enough samples
+    
     for(i=0; i<array_length/QUEUE_LEN; i++) {
-      arm_q15_to_float(queueIn->readBuffer(), arrayIn, array_length);
+      temp = queueIn->readBuffer();
       queueIn->freeBuffer();
+      for(k=0; k<QUEUE_LEN; k++) {
+        arrayIn[k+i*QUEUE_LEN] = (float)temp[k];
+      }
     }
   }
   else {
     Serial.println(F("error in read_array_form_queue: array_length must be a multiple of QUEUE_LEN"));
-    return 0;
-  }
-  return 1;
+  }  
 }
 
 // read elements in buffIn with 50% overlap to create frame
