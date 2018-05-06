@@ -6,7 +6,7 @@ For a full and more complete documentation, see the **PDF MANUAL**
 ## Hardware used
 Platform used is a [TEENSY 3.6 board](https://www.pjrc.com/store/teensy36.html), that uses an ARM Cortex-M4F is a 32 bit processor, clocked at 180MHz. 
 It is combined to the [TEENSY audio shield](https://www.pjrc.com/store/teensy3\_audio.html) is used to provide audio interface in a high 16 bits quality.
-It is therefore based on the [PJRC Audio Library](https://www.pjrc.com/teensy/td_libs_Audio.html) and a modified version of the [CmSIS DSP library](https://www.keil.com/pack/doc/CMSIS/DSP/html/index.html).
+It is therefore based on the [PJRC Audio Library](https://www.pjrc.com/teensy/td_libs_Audio.html) and a modified version of the [CMSIS DSP library](https://www.keil.com/pack/doc/CMSIS/DSP/html/index.html).
 
 ## MATLAB code
 ### Smearing algorithm
@@ -18,7 +18,7 @@ Two main scripts are used to test the smearing algorithm with `frequency_smearin
 The script `Moore_comparison.m` is used to compare the algorithm with results presented by Baer and Moore in [1].
 ### Data generation for C-code
 As the smearing matrix is unique for given parameters, it is first calculated in MATLAB and hard coded in the memory of the TEENSY by simply defining arrays. As memory usage is crucial in an embedded system, the row-indexed sparse storage method (described in [2]) was used to store the matrix's coefficient in a more judicious way.
-This is done with the scripts `generate_smear_matrix.m` that prints the coefficient in a text file using either row-indexed sparse storage or classic storage. The content of this file can then be copy-pasted in the C-code (in `smear\_mat.h`) to declare the arrays containing the smearing coefficient corresponding to the desired parameters. For instance the following parameters:
+This is done with the scripts `generate_smear_matrix.m` that prints the coefficient in a text file using either row-indexed sparse storage or classic storage. The content of this file can then be copy-pasted in the C-code (in `smear_mat.h`) to declare the arrays containing the smearing coefficient corresponding to the desired parameters. For instance the following parameters:
 ```
 fs = 16e3;			% sampling frequency
 N  = 4;				  % frame length
@@ -34,6 +34,14 @@ and those two lines for row-indexed sparse storage:
 unsigned int ija_b6[3] = {3, 3, 3};
 float sa_b6[2] = {1.000000, 1.000000};
 ```
+
+# Implementation on TEENSY
+The programm essentially executes three main tasks:
+* **Real-time block processing**. This take part of the whole data flow, from fetching data from the audio shield, managing input and output circular buffers and sending the data back to the audio shield. In total, four buffers are used as illustrated by the diagramm below:
+
+* **FFT and IFFT transforms**. The CMSIS DSP library is used for all transforms functions as well as for vector operations. Note that for compatibility with the audio library an older version (1.1.0) must be used. Therefore it is not needed to install the full library, one can simply include `arm_math.h` that comes with the installation of TEENSY.
+* **Smearing algorithm**. The smearing matrices are calculated in MATLAB and hard-coded in the memory. Therefore the smearing functions is simply a matrix multiplication. However to save space in the limited memory, the row-index sparse storage method is used.
+
 
 
 
