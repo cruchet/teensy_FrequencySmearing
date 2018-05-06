@@ -35,9 +35,10 @@ unsigned int ija_b6[3] = {3, 3, 3};
 float sa_b6[2] = {1.000000, 1.000000};
 ```
 
-# Implementation on TEENSY
+## Implementation on TEENSY
 The programm essentially executes three main tasks:
 * **Real-time block processing**. This take part of the whole data flow, from fetching data from the audio shield, managing input and output circular buffers and sending the data back to the audio shield. In total, four buffers are used as illustrated by the diagramm below: 
+
 ![picture](pictures/dataFlow.png)
 * **FFT and IFFT transforms**. The CMSIS DSP library is used for all transforms functions as well as for vector operations. Note that for compatibility with the audio library an older version (1.1.0) must be used. Therefore it is not needed to install the full library, one can simply include `arm_math.h` that comes with the installation of TEENSY.
 * **Smearing algorithm**. The smearing matrices are calculated in MATLAB and hard-coded in the memory. Therefore the smearing functions is simply a matrix multiplication. However to save space in the limited memory, the row-index sparse storage method is used.
