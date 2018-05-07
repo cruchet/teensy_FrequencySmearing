@@ -40,8 +40,8 @@ The programm essentially executes three main tasks:
 * **Real-time block processing**. This take part of the whole data flow, from fetching data from the audio shield, managing input and output circular buffers and sending the data back to the audio shield. In total, four buffers are used as illustrated by the diagramm below: 
 
 ![picture](pictures/dataFlow.png)
-* **FFT and IFFT transforms**. The CMSIS DSP library is used for all transforms functions as well as for vector operations. Note that for compatibility with the audio library an older version (1.1.0) must be used. Therefore it is not needed to install the full library, one can simply include `arm_math.h` that comes with the installation of TEENSY.
-* **Smearing algorithm**. The smearing matrices are calculated in MATLAB and hard-coded in the memory. Therefore the smearing functions is simply a matrix multiplication. However to save space in the limited memory, the row-index sparse storage method is used.
+* **FFT and IFFT transforms**. The CMSIS DSP library is used for all transforms functions as well as for vector operations. Note that for compatibility with the audio library an older version (1.1.0) must be used. Therefore it is not needed to install the full library, one can simply include `arm_math.h` that comes with the installation of TEENSY. The radix 2 functions are a bit slower that the radix 4, but they are more flexible regarding possible length of the frame to process. Complex vectors are reprensented in one arrway according to the CMSIS convention: `{real[0], imag[0], real[1], imag[1], ...}`.
+* **Smearing algorithm**. The smearing matrices are calculated in MATLAB and hard-coded in the memory. Therefore the smearing function is simply a matrix multiplication. However to save space in the limited memory, the row-index sparse storage method can be used.
 
 
 
