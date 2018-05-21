@@ -5,7 +5,7 @@
 - [Hardware used](#Hardware-used)
 - [MATLAB code](#matlab-code)
 - [Implementation on TEENSY](#implementation-on-teensy)
-- [Limitations, improvements and future work](#limitation,-improvements-and-future-work)
+- [Limitations, improvements and future work](#limitation-improvements-and-future-work)
 - [References](#references)
 
 ## Authors
