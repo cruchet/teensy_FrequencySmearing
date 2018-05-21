@@ -1,4 +1,4 @@
-%% genereate smear matrix for use in C code
+	%% genereate smear matrix for use in C code
 % -> copy-paste terminal output to fill in a two-dimmensional array:
 %		float A_s[N/2][N/2] = {  {A[0,0],   ... , A[0,N/2]  } ,  
 %								 {			...			    } ,   
@@ -10,11 +10,11 @@ close all
 clc
 
 fs = 16e3;			% sampling frequency
-N  = 4;				% frame length
+N  = 256;				% frame length
 b  = 6;				% smearing coefficient
-tol = 1e-6;			% thershold used for compressed storage
+tol = 1e-3;			% thershold used for compressed storage
 compressed = 1;		% 1 -> row-indexed sparse storage
-					% 0 -> classique two-dimensional array
+					% 0 -> classical two-dimensional array
 
 A_s = calc_smear_matrix(fs,N,b);
 
@@ -29,6 +29,7 @@ if compressed
 		end
 	end
 	spy(A_s)
+	xlabel('columns'); ylabel('rows');
 	disp(['filled: ' num2str(((N/2)^2-count)/(N/2)^2*100) '%']);
 
 	%% compressed matrix
@@ -46,7 +47,7 @@ if compressed
 
 	% write to .txt file
 	fileID = fopen(['sa&ija_b' num2str(b) '_fs' num2str(fs/1000) 'k_L' num2str(N) '.txt'],'w')
-	fprintf(fileID,['unsigned int ija_b' num2str(b) '_fs' num2str(floor(fs/1000)) 'k_L' num2str(N) '[' num2str(length(ija)) '] = {']);
+	fprintf(fileID,['unsigned int ija_b' num2str(b) '[' num2str(length(ija)) '] = {']);
 	for i=1:length(ija)
 		if i==length(ija)
 			fprintf(fileID,'%u', ija(i));
@@ -55,7 +56,7 @@ if compressed
 		end
 	end
 	fprintf(fileID,'};\n');
-	fprintf(fileID,['float sa_b' num2str(b) '_fs' num2str(floor(fs/1000)) 'k_L' num2str(N) '[' num2str(length(sa)) '] = {']);
+	fprintf(fileID,['float sa_b' num2str(b) '[' num2str(length(sa)) '] = {']);
 	for i=1:length(sa)
 		if i==length(sa)
 			fprintf(fileID,'%f', sa(i));
@@ -69,8 +70,7 @@ if compressed
 else	
 	%% uncompressed matrix
 	fileID = fopen(['As_b' num2str(b) '_fs' num2str(fs/1000) 'k_L' num2str(N) '.txt'],'w')
-	fprintf(fileID,['float smear_mat_b' num2str(b) '_N' num2str(N) '_fs' num2str(fs/1000) ...
-		'k[' num2str(N/2) '][' num2str(N/2) '] = {']);
+	fprintf(fileID,['float smear_mat_b' num2str(b) '[' num2str(N/2) '][' num2str(N/2) '] = {']);
 	for i=1:length(A_s)
 		fprintf(fileID,'{');
 		for j=1:length(A_s)

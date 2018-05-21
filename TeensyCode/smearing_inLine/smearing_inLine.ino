@@ -8,7 +8,8 @@
  * a new smearing matrix must be calculated with MatLab script "generate_smear_matrix".
  * Changing paramters always induce recompiling.
  * The choice of parameters is limited. See setI2SFreq() for availble fs. The fft functions 
- * work only for frame length of 16, 64, 256, 1024 samples.
+ * work only for frame length of 16, 64, 256, 1024 samples, but the hann window are currently 
+ * only defined for FFT_LEN = 256.
  * 
  * Author:
  *      Vassili Cruchet
@@ -99,9 +100,8 @@ void loop() {
           
     // window the frame and create complex frame
     for(i=0; i<FFT_LEN; i++) {
-      frameR[i] *= win[i];
-      frameC[2*i] = frameR[i]; // real part
-      frameC[2*i+1] = 0;       // imaginary part
+      frameC[2*i] = frameR[i] * win[i]; // real part
+      frameC[2*i+1] = 0;                // imaginary part
     }
 
     // compute FFT
@@ -110,8 +110,8 @@ void loop() {
 
     if(smearFlag) {
       // process smearing
-      smearing_comp(frameC, B, FFT_LEN, FS);
-      //delayMicroseconds(2000);      // this can be used to test the maximal processing delay.
+      smearing_comp(frameC, FFT_LEN); // use the "comp" or "uncomp" fucntion depending if the COMPRESSED symbol is defined
+      //delayMicroseconds(7200);      // this can be used to test the maximal processing delay.
       //Serial.print("in "); Serial.print(millis()-time); Serial.println(" ms\n"); // diplay the processing time
     }
     

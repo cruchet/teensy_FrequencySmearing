@@ -9,7 +9,7 @@
 #include "smear_mat.h"
 
 #ifndef COMPRESSED
-void smearing_uncomp(float32_t* frame, uint8_t b, int N, float32_t fs) {
+void smearing_uncomp(float32_t* frame, int N) {
   float32_t spec_power[N/2];
   float32_t spec_phase[N/2];
   float32_t* row;
@@ -48,7 +48,7 @@ void smearing_uncomp(float32_t* frame, uint8_t b, int N, float32_t fs) {
 }
 
 #else // COMPRESSED defined
-void smearing_comp(float32_t* frame, uint8_t b, int N, float32_t fs) {
+void smearing_comp(float32_t* frame, int N) {
   float32_t spec_power[N/2];
   float32_t spec_power_smeared[N/2];
   float32_t spec_phase[N/2];

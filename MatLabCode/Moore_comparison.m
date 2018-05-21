@@ -17,7 +17,7 @@
 % FIG.4 of the article.
 
 clc
-
+saveFile = 1;								% bool to save (=1) figures
 filename = ['sounds' filesep 'now.wav'];
 [signal Fs] = audioread(filename);
 fs = 16e3;									% wanted sampling frequency
@@ -105,7 +105,7 @@ for k=0:n_win-1/overlap
 		subplot(4,3,1+3*(k-num))
 			plot(fvec/1000,fftshift(db(spec_pow)),'b');	% clean spectrum
 			xlim([0 fs/2000]); ylim([-50 20]);
-			ylabel('mag [dB]');
+			ylabel('magnitude [dB]');
 			if k==num+3
 				xlabel('frequency [kHz]');
 				IDX_END = idx_h;

@@ -31,6 +31,7 @@ int read_array_form_queue(float arrayIn[], int array_length, AudioRecordQueue* q
     }
 
     for(i=0; i<array_length/QUEUE_LEN; i++) {
+      // copy and convert 16 bits integers queue buffer into floating point arrayIn
       arm_q15_to_float(queueIn->readBuffer(), arrayIn, array_length);
       queueIn->freeBuffer();
     }

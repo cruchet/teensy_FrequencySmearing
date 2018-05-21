@@ -43,7 +43,7 @@ y = real(ifft(Y.*exp(i*unwrap(angle(X)))));
 %% plots
 clc
 close all
-saveFile = 1;
+saveFile = 0;
 % time domain
 figure('Units','normalized','Position', [0.1 0.4 0.35 0.35]);
 plot(t,x/max(x),t,y/max(y));	hold on; grid on;
@@ -79,7 +79,7 @@ end
 
 clc
 clear all
-fs = linspace(50,2000,1000);
+fs = [50:20:10000];
 T = 1;
 f = 10;
 
@@ -93,7 +93,7 @@ for i=1:length(fs)
 	b=1;
 	
 	% calculate smearing matrix
-	A_s = calc_smear_matrix(fs, l, b);
+	A_s = calc_smear_matrix(fs_i, l, b);
 	tic
 	Y = smearing(abs(X),A_s);
 	T_elapsed(i)=toc;
