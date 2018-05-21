@@ -62,7 +62,7 @@ The programm essentially executes three main tasks:
 * **FFT and IFFT transforms**. The CMSIS DSP library is used for all transforms functions as well as for vector operations. Note that for compatibility with the audio library an older version (1.1.0) must be used. Therefore it is not needed to install the full library, one can simply include `arm_math.h` that comes with the installation of TEENSY. The radix 2 functions are a bit slower that the radix 4, but they are more flexible regarding possible length of the frame to process. Complex vectors are reprensented in one array according to the CMSIS convention: `{real[0], imag[0], real[1], imag[1], ...}`.
 * **Smearing algorithm**. The smearing matrices are calculated in MATLAB and hard-coded in the memory. Therefore the smearing function is simply a matrix multiplication. When row-index sparse storage method is used the multiplication is done with the function `sprsax`.
 
-Detail desrciption of all the functions can be found in the [complete documentation](Teensy_HI_Simulator_Documentation.pdf).
+Detailed desrciption of all the functions can be found in the [complete documentation](Teensy_HI_Simulator_Documentation.pdf).
 
 ## Limitations, improvements and future work
 While the basic task is operational, a lot of improvement can be brought to the project in order to reach a usable demonstrator. This concerns mostly operation flexibility and user interface but the algorithm can also be refined with for instance the use of assymetrical auditory filters, as suggested in [1](#references).
