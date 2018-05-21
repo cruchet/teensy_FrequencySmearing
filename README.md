@@ -34,9 +34,9 @@ Two main scripts are used to test the smearing algorithm with `frequency_smearin
 * `Y = smearing(X, A_s)` Smears the power spectrum `X` with the smearing matrix `A_s` previously calculated with`A_s = calc_smear_matrix(fs, N, b)`.
 * `A_s = calc_smear_matrix(fs, N, b)` Calculates the smearing matrix `A_s` of size (N/2 * N/2), with N being the length of the frame to process. It uses the auditory filter calculated by `A_s = calc_audit_filter(fs, N, b)`. `b>1` is the smearing coefficient, (when `b=1`, the spectrum is unchanged).
 
-The script `Moore_comparison.m` is used to compare the algorithm with results presented by Baer and Moore in [1].
+The script `Moore_comparison.m` is used to compare the algorithm with results presented by Baer and Moore in [1](#references).
 ### Data generation for C-code
-As the smearing matrix is unique for given parameters, it is first calculated in MATLAB and hard coded in the memory of the TEENSY by simply defining arrays. As memory usage is crucial in an embedded system, the row-indexed sparse storage method (described in [2]) was used to store the matrix's coefficient in a more judicious way.
+As the smearing matrix is unique for given parameters, it is first calculated in MATLAB and hard coded in the memory of the TEENSY by simply defining arrays. As memory usage is crucial in an embedded system, the row-indexed sparse storage method (described in [2](#references)) was used to store the matrix's coefficient in a more judicious way.
 This is done with the scripts `generate_smear_matrix.m` that prints the coefficient in a text file using either row-indexed sparse storage or normal two-dimensional array. The content of this file can then be copy-pasted in the C-code (in `smear_mat.h`) to declare the arrays containing the smearing coefficient corresponding to the desired parameters. For instance the following parameters:
 ```
 fs = 16e3;			% sampling frequency
@@ -65,7 +65,7 @@ The programm essentially executes three main tasks:
 Detail desrciption of all the functions can be found in the [complete documentation](Teensy_HI_Simulator_Documentation.pdf).
 
 ## Limitations, improvements and future work
-While the basic task is operational, a lot of improvement can be brought to the project in order to reach a usable demonstrator. This concerns mostly operation flexibility and user interface but the algorithm can also be refined with for instance the use of assymetrical auditory filters, as suggested in [1].
+While the basic task is operational, a lot of improvement can be brought to the project in order to reach a usable demonstrator. This concerns mostly operation flexibility and user interface but the algorithm can also be refined with for instance the use of assymetrical auditory filters, as suggested in [1](#references).
 At this point the remaining task to be done are:
 - [ ] **Possibility to change smearing coefficient in-line**: This implies an important restructuring of the way smearing matrices are compiled. Now, only one is compiled according to constant parameters defined in `constant.h`. This approach was taken to solve memory issues, however it would be possible to compile several matrices and alterable parameters.
 
@@ -75,7 +75,7 @@ At this point the remaining task to be done are:
 
 - [ ] **Add adjustable low-pass filter**: Loss of high frequency sensitivity is also an effect of hearing impairement that could be implemented in the simulator. Note that as the sampling frequency is lowered to 16kHz, the audio input is already low-pass filtered at 8kHz.
 
-- [ ] **Implement asymmetrical broadening**: Bear and Moore [1] describe that most subjects with cochlear hearing loss have the lower branch of their auditory filter broader than the upper branch. They also showed that a broader lower branch have greater effect on speach intelligibility. Therefore, being able to implement asymmetrical broadening would simulate in a more realistic way hearing loss and would also probably increase the effects of the algorithm.
+- [ ] **Implement asymmetrical broadening**: Bear and Moore [1](#references) describe that most subjects with cochlear hearing loss have the lower branch of their auditory filter broader than the upper branch. They also showed that a broader lower branch have greater effect on speach intelligibility. Therefore, being able to implement asymmetrical broadening would simulate in a more realistic way hearing loss and would also probably increase the effects of the algorithm.
 
 - [ ] **Implement stereo processing**: Even if that represent a big step in the developpement and would maybe require two devices running in parallel, stereo processing would be closer to real hearing impairement and allow a more immersive experience for the subjects.
 
