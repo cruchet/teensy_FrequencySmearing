@@ -75,7 +75,7 @@ At this point the remaining task to be done are:
 
 - [ ] **Add adjustable low-pass filter**: Loss of high frequency sensitivity is also an effect of hearing impairement that could be implemented in the simulator. Note that as the sampling frequency is lowered to 16kHz, the audio input is already low-pass filtered at 8kHz.
 
-- [ ] **Implement asymmetrical broadening**: Bear and Moore [1](#references) describe that most subjects with cochlear hearing loss have the lower branch of their auditory filter broader than the upper branch. They also showed that a broader lower branch have greater effect on speach intelligibility. Therefore, being able to implement asymmetrical broadening would simulate in a more realistic way hearing loss and would also probably increase the effects of the algorithm.
+- [ ] **Implement asymmetrical broadening**: Bear and Moore [1](#references) describe that most subjects with cochlear hearing loss have the lower branch of their auditory filter broader than the upper branch. They also showed that a broader lower branch have greater effect on speech intelligibility. Therefore, being able to implement asymmetrical broadening would simulate in a more realistic way hearing loss and would also probably increase the effects of the algorithm.
 
 - [ ] **Implement stereo processing**: Even if that represent a big step in the developpement and would maybe require two devices running in parallel, stereo processing would be closer to real hearing impairement and allow a more immersive experience for the subjects.
 
