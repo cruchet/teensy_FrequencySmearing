@@ -17,7 +17,7 @@
 % FIG.4 of the article.
 
 clc
-saveFile = 1;								% bool to save (=1) figures
+saveFile = 0;								% bool to save (=1) figures
 filename = ['sounds' filesep 'now.wav'];
 [signal Fs] = audioread(filename);
 fs = 16e3;									% wanted sampling frequency
@@ -42,6 +42,8 @@ b = 3;										% broadening factor
 close all
 clc
 
+fontsize = 12;		% fontsize in pictures
+nFrame = 4;			% number of frame to be plot
 % calculate smearing matrix
 A_s = calc_smear_matrix(fs, 2*l_win, b);
 
@@ -96,43 +98,47 @@ for k=0:n_win-1/overlap
 
 %	
 % plot frame spectrum and time domain for a few frames
-	num=32;
-	if k>=num && k<=num+3
+	num=34;
+	if k>=num && k<=num+nFrame-1
 		[S_y fvec]=make_spectrum(y,fs);
 		fig_tit = ['short-term spectra comparison, b=' num2str(b)];
 		H=figure(1);
 		set(gcf,'Units','normalized','Position',[0 0 1 1]);
-		subplot(4,3,1+3*(k-num))
+		set(gca,'FontSize',fontsize);
+		subplot(nFrame,3,1+3*(k-num))
 			plot(fvec/1000,fftshift(db(spec_pow)),'b');	% clean spectrum
 			xlim([0 fs/2000]); ylim([-50 20]);
-			ylabel('magnitude [dB]');
-			if k==num+3
-				xlabel('frequency [kHz]');
+			ylabel('magnitude [dB]','FontSize',fontsize);
+			if k==num+nFrame-1
+				xlabel('frequency [kHz]','FontSize',fontsize);
 				IDX_END = idx_h;
 			elseif k==num
-				title('input spec');
+				title('input spec','FontSize',fontsize);
 				IDX_START = idx_l;
 			end
-		subplot(4,3,2+3*(k-num))
+		subplot(nFrame,3,2+3*(k-num))
 			plot(fvec/1000,fftshift(db(Y_pow)),'b');	% smeared spectrum
 			xlim([0 fs/2000]); ylim([-50 20]);
-			if k==num+3
-				xlabel('frequency [kHz]');
+			if k==num+nFrame-1
+				xlabel('frequency [kHz]','FontSize',fontsize);
 			elseif k==num
-				title('smeared spec');
+				title('smeared spec','FontSize',fontsize);
 			end
-			legend(['frame #' num2str(k)],'Location','northeast')
-		subplot(4,3,3+3*(k-num))
+			l=legend(['frame #' num2str(k)],'Location','northeast');
+			set(l,'FontSize',fontsize);
+		subplot(nFrame,3,3+3*(k-num))
 			plot(fvec/1000,db(S_y)+50,'b');		% IFFT spec	
 				% an offset of -50dB due to windowing is compensated.
 			xlim([0 fs/2000]); ylim([-50 20]);
-			if k==num+3
-				xlabel('frequency [kHz]');
+			if k==num+nFrame-1
+				xlabel('frequency [kHz]','FontSize',fontsize);
 			elseif k==num
-				title('output spec');
+				title('output spec','FontSize',fontsize);
 			end	
 		set(H,'Name',fig_tit);
-		
+		set(findobj(gcf,'type','axes'),'FontSize',fontsize);
+		set(findobj(gcf,'Type','Line'),'LineWidth',1);
+
 		% plot time domain frames
 		H=figure(2);	fig_tit = 'windowed time signals';
 		set(H,'Name',fig_tit);
@@ -145,30 +151,30 @@ for k=0:n_win-1/overlap
 		subplot(1,2,2); grid on;
 		plot((tVec+(k-num)*length(y)/(4*fs))*1000, y+(4-(k-num))); hold on;
 		
-	elseif k==num + 4
+	elseif k==num + nFrame
 		length(y)
 		IDX_END-IDX_START
 		figure(2)
 		tVec = [0:1/fs:1.75*length(y)/fs - 1/fs]*1000; 
 		% input signal
-		subplot(1,2,1)
+	subplot(1,2,1)
 		plot(tVec, signal(IDX_START:IDX_END),'k');
 		set(gca,'ytick',[]);	set(gca,'yticklabel',[]);
 		xlabel('Time (ms)');		ylabel('Amplitude');	ylim([-1 4.5]);
 		title('Input');
 		% output signal
-		subplot(1,2,2)
+	subplot(1,2,2)
 		plot(tVec, signal_smear(IDX_START:IDX_END),'k');
 		set(gca,'ytick',[]);	set(gca,'yticklabel',[]);
 		xlabel('Time (ms)');		ylabel('Amplitude');	ylim([-1 4.5]);
 		title('Output');
-	end	
+ 	end	
 end
 if saveFile
 	figure(1);
-	print(['outputs' filesep 'moore_comp_spec.eps'], '-depsc');
+	print(['outputs' filesep 'poster1_moore_comp_spec.eps'], '-depsc');
 	figure(2);
-	print(['outputs' filesep 'moore_comp_time.eps'], '-depsc');
+	print(['outputs' filesep 'poster1_moore_comp_time.eps'], '-depsc');
 end	
 %% plot 
 % Plot the final results
