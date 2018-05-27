@@ -9,15 +9,11 @@
 - [References](#references)
 
 ## Authors
-**Supervisor**
-* Bastian Epp <bepp@elektro.dtu.dk>
-
-**Author**
-* Vassili Cruchet <vassili.cruchet@gmail.com>
+Vassili Cruchet <vassili.cruchet@gmail.com>
 
 ## Idea and background
 One of the consequences of hearing impairment, is a decrease in the ability to discriminate frequency. This can be modeled by smearing the audio spectrum. The idea and goal of this project is to implement a smearing algorithm on an embedded platform to process audio in real-time. This could then be used as a demonstrator in different events where people would wear headphones and experience this aspect of hearing impairment and the deficit in communication that comes with it. In practice, the algorithm was first implemented in MATLAB to test it off-line with different parameters. Secondly, the algorithm was implemented on a microcontroller-based platform (TEENSY 3.6) which integrate a DSP co-processor with which complete libraries can be used.
-For a full documentation, see the [PDF documentation](Teensy_HI_Simulator_Documentation.pdf)
+For a full documentation, see the [PDF documentation](Teensy_HI_Simulator_Documentation.pdf). This latter's Latex source code can also be downloaded from [here] **add link to latex doc**. 
 
 ### Smearing principle
 In a general maner, frequency smearing consists in convolving each frequency component of the spectrum with an auditory filter centered on the corresponding frequency. The auditory filter is modeled as a _roex(p)_ function where _p_ is a tuning factor for the filter that can be modified to broaden the filter. The wider the filter is, the more the input spectrum will be smeared and smoothened.
@@ -65,19 +61,19 @@ The programm essentially executes three main tasks:
 Detailed desrciption of all the functions can be found in the [complete documentation](Teensy_HI_Simulator_Documentation.pdf).
 
 ## Limitations, improvements and future work
-While the basic task is operational, a lot of improvement can be brought to the project in order to reach a usable demonstrator. This concerns mostly operation flexibility and user interface but the algorithm can also be refined with for instance the use of assymetrical auditory filters, as suggested in [1](#references).
-At this point the remaining task to be done are:
+While the basic task is operational, a lot of improvements can be brought to the project in order to reach a usable demonstrator. This concerns mostly operation flexibility and user interface but the algorithm can also be refined with for instance the use of asymetrical auditory filters, as suggested in [1](#references).
+At this point the remaining tasks to be done are:
 - [ ] **Possibility to change smearing coefficient in-line**: This implies an important restructuring of the way smearing matrices are compiled. Now, only one is compiled according to constant parameters defined in `constant.h`. This approach was taken to solve memory issues, however it would be possible to compile several matrices and alterable parameters.
 
-- [ ] **Implement more different window lengths to investigate effect of frequency resolution**: In the MATLAB off-line tests, frequency resolution have an important impact on the influence of the algorithm. To adjust this parameter, more hann windows need to be implemented (currently, only a frame length of 256 samples is possible) and potentially more smearing matrices. The FFT/IFFT function also have a limited number of available frame lengths (16, 32, 64, 128, 256, 512, 1024, 2048 according to this [thread](https://forum.pjrc.com/threads/35277-arm_math-h-and-the-FFT-audio-blocks)).
+- [ ] **Implement more different window lengths to investigate effect of frequency resolution**: In the MATLAB off-line tests, frequency resolution have an important impact on the influence of the algorithm. To adjust this parameter, more hann windows need to be implemented (currently, only a frame length of 256 samples is possible) and potentially more smearing matrices. The FFT/IFFT functions also have a limited number of available frame lengths (16, 32, 64, 128, 256, 512, 1024, 2048 according to this [thread](https://forum.pjrc.com/threads/35277-arm_math-h-and-the-FFT-audio-blocks)).
 
-- [ ] **Record audio samples for further analysis**: It would allow to caracterize the performance of the embeded algortihm in a more rigorous way.
+- [ ] **Record more and better audio samples for system characterization**: Some recordings have already been done but due to high noise level, poor recording setup and lack of time, it is difficult to have precise results on the full system's performances.
 
-- [ ] **Add adjustable low-pass filter**: Loss of high frequency sensitivity is also an effect of hearing impairement that could be implemented in the simulator. Note that as the sampling frequency is lowered to 16kHz, the audio input is already low-pass filtered at 8kHz.
+- [ ] **Add adjustable low-pass filter**: Loss of high frequency sensitivity is also an effect of hearing impairment that could be implemented in the simulator. Note that as the sampling frequency is lowered to 16kHz, the audio input is already low-pass filtered at 8kHz.
 
-- [ ] **Implement asymmetrical broadening**: Bear and Moore [1](#references) describe that most subjects with cochlear hearing loss have the lower branch of their auditory filter broader than the upper branch. They also showed that a broader lower branch have greater effect on speach intelligibility. Therefore, being able to implement asymmetrical broadening would simulate in a more realistic way hearing loss and would also probably increase the effects of the algorithm.
+- [ ] **Implement asymmetrical broadening**: Bear and Moore [1](#references) describe that most subjects with cochlear hearing loss have the lower branch of their auditory filter broader than the upper branch. They also showed that a broader lower branch have greater effect on speech intelligibility. Therefore, being able to implement asymmetrical broadening would simulate in a more realistic way hearing loss and would also probably increase the effects of the algorithm.
 
-- [ ] **Implement stereo processing**: Even if that represent a big step in the developpement and would maybe require two devices running in parallel, stereo processing would be closer to real hearing impairement and allow a more immersive experience for the subjects.
+- [ ] **Implement stereo processing**: Even if that represent a big step in the developpement and would maybe require two devices running in parallel, stereo processing would be closer to real hearing impairment and allow a more immersive experience for the subjects.
 
 - [ ] **Improve hardware packaging and user interface**: A final demonstration kit would ideally be integrated into headphones and have a simple and flexible user interface to modify parameters as output level, cut-off frequency of the low-pass filter, smearing coefficient, etc. It could also be possible to have a third party (or some automatic sequence in the programm) that modifies these parameters independently of the user's will.
 
