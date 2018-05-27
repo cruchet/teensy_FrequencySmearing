@@ -13,7 +13,7 @@ Vassili Cruchet <vassili.cruchet@gmail.com>
 
 ## Idea and background
 One of the consequences of hearing impairment, is a decrease in the ability to discriminate frequency. This can be modeled by smearing the audio spectrum. The idea and goal of this project is to implement a smearing algorithm on an embedded platform to process audio in real-time. This could then be used as a demonstrator in different events where people would wear headphones and experience this aspect of hearing impairment and the deficit in communication that comes with it. In practice, the algorithm was first implemented in MATLAB to test it off-line with different parameters. Secondly, the algorithm was implemented on a microcontroller-based platform (TEENSY 3.6) which integrate a DSP co-processor with which complete libraries can be used.
-For a full documentation, see the [PDF documentation](Teensy_HI_Simulator_Documentation.pdf)
+For a full documentation, see the [PDF documentation](Teensy_HI_Simulator_Documentation.pdf). This latter's Latex source code can also be downloaded from [here] **add link to latex doc**. 
 
 ### Smearing principle
 In a general maner, frequency smearing consists in convolving each frequency component of the spectrum with an auditory filter centered on the corresponding frequency. The auditory filter is modeled as a _roex(p)_ function where _p_ is a tuning factor for the filter that can be modified to broaden the filter. The wider the filter is, the more the input spectrum will be smeared and smoothened.
