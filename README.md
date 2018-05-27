@@ -9,11 +9,7 @@
 - [References](#references)
 
 ## Authors
-**Supervisor**
-* Bastian Epp <bepp@elektro.dtu.dk>
-
-**Author**
-* Vassili Cruchet <vassili.cruchet@gmail.com>
+Vassili Cruchet <vassili.cruchet@gmail.com>
 
 ## Idea and background
 One of the consequences of hearing impairment, is a decrease in the ability to discriminate frequency. This can be modeled by smearing the audio spectrum. The idea and goal of this project is to implement a smearing algorithm on an embedded platform to process audio in real-time. This could then be used as a demonstrator in different events where people would wear headphones and experience this aspect of hearing impairment and the deficit in communication that comes with it. In practice, the algorithm was first implemented in MATLAB to test it off-line with different parameters. Secondly, the algorithm was implemented on a microcontroller-based platform (TEENSY 3.6) which integrate a DSP co-processor with which complete libraries can be used.
@@ -71,7 +67,7 @@ At this point the remaining tasks to be done are:
 
 - [ ] **Implement more different window lengths to investigate effect of frequency resolution**: In the MATLAB off-line tests, frequency resolution have an important impact on the influence of the algorithm. To adjust this parameter, more hann windows need to be implemented (currently, only a frame length of 256 samples is possible) and potentially more smearing matrices. The FFT/IFFT functions also have a limited number of available frame lengths (16, 32, 64, 128, 256, 512, 1024, 2048 according to this [thread](https://forum.pjrc.com/threads/35277-arm_math-h-and-the-FFT-audio-blocks)).
 
-- [ ] **Record audio samples for further analysis**: It would allow to characterize the performance of the embedded algorithm in a more rigorous way.
+- [ ] **Record more and better audio samples for system characterization**: Some recordings have already been done but due to high noise level, poor recording setup and lack of time, it is difficult to have precise results on the full system's performances.
 
 - [ ] **Add adjustable low-pass filter**: Loss of high frequency sensitivity is also an effect of hearing impairment that could be implemented in the simulator. Note that as the sampling frequency is lowered to 16kHz, the audio input is already low-pass filtered at 8kHz.
 
