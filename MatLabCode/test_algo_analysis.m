@@ -14,8 +14,8 @@ clc
 clear all
 close all
 
-savefile = 0;
-fontsize = 14;
+savefile = 1;
+fontsize = 24;
 output = importdata(['test_algo_outputs' filesep 'fft_ifft_comp.txt'], ' ');
 xVec = output(1,:);
 yVec = output(2,:);
@@ -32,17 +32,17 @@ subplot(2,1,2);
 plot(yVec(:),'.-');
 % xlim(	[3000,3040]);
 
-figure
+figure('Units','normalized','Position',[0.1 0.1 0.7 0.8]);
 plot(fVec, db(xSpec),'b'); hold on;
 plot(fVec, db(ySpec),'r');
 xlim([0 fs/2]);	ylim([-150 0]);
 xlabel('Frequency [Hz]');	ylabel('Magnitude [dB]');
-title('embeded process of sine (b=6, N=256)');
-l=legend('original','smeared');
+% title('embeded process of sine (b=6, N=256)');
+l=legend('original','smeared (b = 6)');
 set(l,'Fontsize',fontsize);
 set(gca,'Fontsize',fontsize);
-% set(findobj('Type','line'),'Linewidth',1);
+set(findobj('Type','line'),'Linewidth',1);
 
 if savefile
-	print(['test_algo_outputs' filesep 'figures' filesep 'offline_teensy_sines_comp.png'], '-dpng');
+	print(['test_algo_outputs' filesep 'figures' filesep 'offline_teensy_sines_comp_POSTER.eps'], '-depsc');
 end

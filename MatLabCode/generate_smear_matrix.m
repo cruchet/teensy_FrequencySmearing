@@ -42,7 +42,7 @@ if compressed
 
 	[sa ija] = compress_matrix(A_s, N/2, tol, N^2);
 	disp(['usage ' num2str( (length(sa)+length(ija))/(N/2)^2*100) '% => ' num2str(length(sa)*8/1000) ' kbytes']);
-	title(['Smearing matrix (b=' num2str(b) ', thershold=' num2str(tol) ')'],'FontName','times','FontSize',14,'Interpreter','latex');
+	title(['Smearing matrix (b=' num2str(b) ', thershold=' num2str(tol) ')'],'FontSize',14);
 	print(['outputs' filesep 'spy_mat.eps'], '-depsc');
 
 	% write to .txt file

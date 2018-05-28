@@ -50,7 +50,7 @@ t = [0:1/fs:(length(sig_clean)-1)/fs];
 clc
 close all
 saveFile = 1;
-fontsize = 14;
+fontsize = 24;
 % time domain
 figure('Units','normalized','Position', [0.1 0.1 0.35 0.35]);
 plot(t(5000:5512),sig_clean(5000:5512)/max(sig_clean),t(5000:5512),sig_smear(5000:5512)/max(sig_smear));	hold on; grid on;
@@ -62,21 +62,21 @@ legend('normal',['smeared, b = ' num2str(b)]);
 % end
 
 % spectrum
-l=length(sig_clean)/8;
+len=length(sig_clean)/8;
 idx=1;
-[spec_clean fVec_C]	= make_spectrum(sig_clean(idx:idx+l-1).*hann(l),fs);
-[spec_smear fVec_S]	= make_spectrum(sig_smear(idx:idx+l-1).*hann(1),fs);
+[spec_clean fVec_C]	= make_spectrum(sig_clean(idx:idx+len-1).*hann(len),fs);
+[spec_smear fVec_S]	= make_spectrum(sig_smear(idx:idx+len-1).*hann(1),fs);
 
 figure('Units','normalized','Position', [0.1 0.1 0.75 0.8]);
-plot(fVec_S,db(spec_smear),'r','Linewidth',1);		grid on; hold on;
-plot(fVec_C,db(spec_clean),'b','Linewidth',1);		hold on; grid on;
+plot(fVec_S,db(spec_smear),'r','Linewidth',1);		hold on;
+plot(fVec_C,db(spec_clean),'b','Linewidth',1);		hold on; %grid on;
 set(gca,'Fontsize',fontsize-2);
 xlabel('Frequency [Hz]','Fontsize',fontsize);	ylabel('Magnitude [dB]','Fontsize',fontsize);
-xlim([0 16e3/2]);	ylim([-100 -15]);
+xlim([0 16e3/2]);	ylim([-120 -15]);
 l=legend(['smeared, b = ' num2str(b)],'normal','Location','best');
 set(l,'Fontsize',fontsize);
 % save spectrum plot and normalized audio file
 if saveFile
-	print(['final_recordings' filesep 'Teensy_recordings_sine.png'], '-dpng');
+	print(['final_recordings' filesep 'Teensy_recordings_sine_POSTER.eps'], '-depsc');
 % 	audiowrite(['outputs' filesep 'smear_' signalName '.wav'], y/max(abs(y)), fs);
 end	
