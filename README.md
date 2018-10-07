@@ -18,7 +18,7 @@ For a full documentation, see the [PDF documentation](Teensy_HI_Simulator_Docume
 ### Smearing principle
 In a general maner, frequency smearing consists in convolving each frequency component of the spectrum with an auditory filter centered on the corresponding frequency. The auditory filter is modeled as a _roex(p)_ function where _p_ is a tuning factor for the filter that can be modified to broaden the filter. The wider the filter is, the more the input spectrum will be smeared and smoothened.
 
-## Hardware used
+### Hardware used
 The platform used is a [TEENSY 3.6 board](https://www.pjrc.com/store/teensy36.html), that uses an ARM Cortex-M4F is a 32 bit microcontroller clocked at 180MHz. 
 It is combined to the [TEENSY audio shield](https://www.pjrc.com/store/teensy3\_audio.html) is used to provide audio interface in a high 16 bits quality.
 It is therefore based on the [PJRC Audio Library](https://www.pjrc.com/teensy/td_libs_Audio.html) and a modified version of the [CMSIS DSP library](https://www.keil.com/pack/doc/CMSIS/DSP/html/index.html).
